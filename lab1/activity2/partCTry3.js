@@ -1,5 +1,0 @@
-class lol {
-  class derp {
-    
-  }
-}
