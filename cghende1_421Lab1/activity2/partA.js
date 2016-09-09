@@ -15,12 +15,12 @@ var postfixCalculator = function() {
   }
 }()
 
-expressions = [
-  '{"number" : 5, "operation" : "add"}', // returns 5 (assumes a starting init value of 0)
-  '{"number" : 2, "operation" :  "subtract"}', // returns 3 (5-2)
-  '{"number" : 19, "operation" : "add"}' // returns 22 (19+3)
-]
-
-for (var i = 0; i < expressions.length; i+=1) {
-  console.log(postfixCalculator(expressions[i]));
-}
+// expressions = [
+//   '{"number" : 5, "operation" : "add"}', // returns 5 (assumes a starting init value of 0)
+//   '{"number" : 2, "operation" :  "subtract"}', // returns 3 (5-2)
+//   '{"number" : 19, "operation" : "add"}' // returns 22 (19+3)
+// ]
+//
+// for (var i = 0; i < expressions.length; i+=1) {
+//   console.log(postfixCalculator(expressions[i]));
+// }

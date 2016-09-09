@@ -1,7 +1,3 @@
-
-
-
-
 class PostfixCalculator {
 
   constructor() {
@@ -73,20 +69,20 @@ function print(stack) {
   console.log(numbers)
 }
 
-a = '{"number" : 5, "operation" : "add"}'
-b = '{"expr": {"number" : 2, "operation" : "subtract"}, "operation" : "push"}'
-c = '{"expr": {"number" : 19, "operation" :  "add"}, "operation" :  "push"}'
-d = '{"operation" :  "pop"}'
-e = '{"operation" :  "print"}'
-f = '{"expr": {"expr": {"operation" :  "pop"}, "operation" :  "add"}, "operation" : "push"}'
-calc = new PostfixCalculator();
-console.log(calc.evaluate(a))
-console.log(calc.evaluate(b))
-console.log(calc.stack)
-console.log(calc.evaluate(c))
-console.log(calc.stack)
-console.log(calc.evaluate(d))
-console.log(calc.stack)
-calc.evaluate(e)
-console.log(calc.evaluate(f))
+// a = '{"number" : 5, "operation" : "add"}'
+// b = '{"expr": {"number" : 2, "operation" : "subtract"}, "operation" : "push"}'
+// c = '{"expr": {"number" : 19, "operation" :  "add"}, "operation" :  "push"}'
+// d = '{"operation" :  "pop"}'
+// e = '{"operation" :  "print"}'
+// f = '{"expr": {"expr": {"operation" :  "pop"}, "operation" :  "add"}, "operation" : "push"}'
+// calc = new PostfixCalculator();
+// console.log(calc.evaluate(a))
+// console.log(calc.evaluate(b))
+// console.log(calc.stack)
+// console.log(calc.evaluate(c))
+// console.log(calc.stack)
+// console.log(calc.evaluate(d))
+// console.log(calc.stack)
+// calc.evaluate(e)
+// console.log(calc.evaluate(f))
 // console.log(calc.stack)
