@@ -1,45 +1,23 @@
-var files = require("./files.js")
+var File = require("./modules/file.js")
+var r = require("./modules/router.js")
+var http = require('http');
 
-function Router() {
 
-  this.handlers = {};
-
-  this.addContext = function(pathname, handler) {
-    this.handlers[pathname] = handler;
-  }
-
-  this.route = function(req, res) {
-    pathname = req;
-    handler = this.handlers[pathname];
-    if (handler === undefined) {
-      console.log('404');
-      return;
-      // res.writeHead(404);
-      // res.end('lol no');
-    }
-    handler.handle(req, res);
-  }
-}
-
-function Handler() {
-  this.handle = function(req, res) {
-    console.log("500");
-  }
-}
-
-var Awesome = Object.create(Handler);
+var Awesome = Object.create(r.Handler);
 Awesome.handle = function(req, res) {
   console.log('200');
+  res.writeHead(200);
+  res.end('yay!');
 }
 
 
 
-router = new Router();
+router = new r.Router();
+
+router.addContext("/lol", Awesome)
+router.addContext("/asdas", new r.Handler())
 
 
-router.addContext("lol", Awesome)
-router.addContext("asdas", new Handler())
-
-router.route("lol", 5)
-router.route("lul", 5)
-router.route("asdas", 5)
+http.createServer(function (request, response) {
+  router.route(request, response)
+}).listen(1337);
