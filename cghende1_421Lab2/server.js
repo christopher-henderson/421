@@ -1,22 +1,13 @@
 var File = require("./modules/file.js");
 var r = require("./modules/router.js");
-var http = require('http');
-
-
-var Awesome = Object.create(r.Handler);
-Awesome.handle = function(req, res) {
-  console.log('200');
-  res.writeHead(200);
-  res.end('yay!');
-};
-
-
+var http = require("http");
+var handlers = require("./handlers/handlers.js");
 
 router = new r.Router();
 
-router.addContext("^/lol/?$", Awesome);
-router.addContext("/asdas", new r.Handler());
-router.addContext('/uhoh');
+for (var i=0; i < handlers.length; i++) {
+  router.addRoute(handlers[i][0], handlers[i][1]);
+}
 
 http.createServer(function (request, response) {
   router.route(request, response);

@@ -5,7 +5,7 @@ function Router() {
 
   this.patterns = [];
 
-  this.addContext = function(pattern, handler) {
+  this.addRoute = function(pattern, handler) {
     this.patterns.push(new Pattern(pattern, handler || new Handler()));
   };
 
