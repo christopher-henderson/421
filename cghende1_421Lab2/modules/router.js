@@ -6,7 +6,7 @@ function Router() {
   this.patterns = [];
 
   this.addRoute = function(pattern, handler) {
-    this.patterns.push(new Pattern(pattern, handler || new Handler()));
+    this.patterns.push(new Route(pattern, handler || new Handler()));
   };
 
   this.route = function(req, res) {
@@ -24,19 +24,19 @@ function Router() {
   };
 }
 
-function Pattern(pattern, handler) {
-  this.pattern = new RegExp(pattern);
-  this.handler = handler;
-  this.handlerOrNull = function(path) {
-    return (this.pattern.exec(path) !== null) ? this.handler : null;
-  };
-}
-
 function Handler() {
   this.handle = function(req, res) {
     console.log("500");
     res.writeHead(500);
     res.end('WHOOPS!');
+  };
+}
+
+function Route(pattern, handler) {
+  this.pattern = new RegExp(pattern);
+  this.handler = handler;
+  this.handlerOrNull = function(path) {
+    return (this.pattern.exec(path) !== null) ? this.handler : null;
   };
 }
 

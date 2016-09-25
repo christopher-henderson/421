@@ -1,12 +1,12 @@
-var File = require("./modules/file.js");
-var r = require("./modules/router.js");
 var http = require("http");
-var handlers = require("./handlers/handlers.js");
+
+var routes= require("./routes/routes.js");
+var r = require("./modules/router.js");
 
 router = new r.Router();
 
-for (var i=0; i < handlers.length; i++) {
-  router.addRoute(handlers[i][0], handlers[i][1]);
+for (var i=0; i < routes.length; i++) {
+  router.addRoute(routes[i][0], routes[i][1]);
 }
 
 http.createServer(function (request, response) {
