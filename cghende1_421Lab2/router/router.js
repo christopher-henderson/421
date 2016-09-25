@@ -1,6 +1,8 @@
 var url = require('url');
 var qstring = require('querystring');
 
+var c = require("../cookies/cookies.js");
+
 function Router() {
 
   this.patterns = [];
@@ -17,7 +19,9 @@ function Router() {
     for (var index=0; index < this.patterns.length; index++) {
       var handler = this.patterns[index].handlerOrNull(pathname);
       if (handler !== null) {
-        return handler.handle(req, res);
+        // Asks the cookie service to fill in loggedIn and username.
+        var filledReq = c.setCookieInfo(req);
+        return handler.handle(filledReq, res);
       }
     }
     return NotFound.handle(req, res);
