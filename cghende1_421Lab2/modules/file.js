@@ -1,5 +1,4 @@
-'use strict';
-const fs = require('fs');
+var fs = require('fs');
 
 function concatenate(files) {
     var result = "";
@@ -8,7 +7,7 @@ function concatenate(files) {
       if (files.length > 0) {
           fs.readFile(files.pop(), 'utf-8', lol);
       } else {
-        console.log(result)
+        console.log(result);
       }
     }
     fs.readFile(files.pop(), 'utf-8', lol);

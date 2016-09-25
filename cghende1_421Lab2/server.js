@@ -1,7 +1,7 @@
 var http = require("http");
 
 var routes= require("./routes/routes.js");
-var r = require("./modules/router.js");
+var r = require("./router/router.js");
 
 router = new r.Router();
 
