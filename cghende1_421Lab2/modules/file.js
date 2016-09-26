@@ -1,16 +1,19 @@
 var fs = require('fs');
 
-function concatenate(files) {
+function concatenate(files, callback) {
     var result = "";
-    function lol(error, data) {
+    function inner(error, data) {
       result += data;
       if (files.length > 0) {
-          fs.readFile(files.pop(), 'utf-8', lol);
+          fs.readFile(files.pop(), 'utf-8', inner);
       } else {
-        console.log(result);
+        callback(result);
       }
     }
-    fs.readFile(files.pop(), 'utf-8', lol);
+    fs.readFile(files.pop(), 'utf-8', inner);
 }
 
+exports.get = function(file, callback) {
+  concatenate([file], callback);
+};
 exports.concatenate = concatenate;
