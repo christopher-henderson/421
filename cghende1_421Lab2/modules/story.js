@@ -1,4 +1,3 @@
-var files = require("./file.js");
 var path = require("path");
 var fs = require("fs");
 
@@ -18,7 +17,7 @@ function getStories(callback) {
       return f.endsWith(".story");
     });
     var paths = stories.map(function(f) {
-      return root + "/" + f;
+      return root + path.sep + f;
     });
     function inner(error, data) {
       result.push(new Story(JSON.parse(data)));
