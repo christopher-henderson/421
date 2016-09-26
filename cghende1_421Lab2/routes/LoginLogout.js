@@ -19,7 +19,7 @@ Login.handle = function(req, res) {
     res.end('Invalid Credentials.');
     return;
   }
-  c.addCookie(query.username);
+  c.addCookie(query.username, query.role);
   res.writeHead(302, {
     'Set-Cookie': query.username + '=thisisatotallyfakedtokensdewf!!324we; Max-Age=31622400',
     'Location': '/'
