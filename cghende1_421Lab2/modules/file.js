@@ -3,7 +3,7 @@ var fs = require('fs');
 function concatenate(files, callback) {
     var result = "";
     function inner(error, data) {
-      result += data;
+      result = data + result;
       if (files.length > 0) {
           fs.readFile(files.pop(), 'utf-8', inner);
       } else {

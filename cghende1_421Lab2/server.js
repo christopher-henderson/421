@@ -11,4 +11,4 @@ for (var i=0; i < routes.length; i++) {
 
 http.createServer(function (request, response) {
   router.route(request, response);
-}).listen(1337);
+}).listen(3000);

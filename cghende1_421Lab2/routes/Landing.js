@@ -13,11 +13,9 @@ Landing.handle = function(req, res) {
     var page = "";
     for (var index in stories) {
       var story = stories[index];
-      if (req.loggedIn || story.public) {
-        page += "<h2>";
-        page += "<a href='/story/" + story.title + "/'>" + story.title + "</a>";
-        page += "</h2>";
-      }
+      page += "<h2>";
+      page += (req.loggedIn || story.public) ? "<a href='/story/" + story.title + "/'>" + story.title + "</a>" : story.title;
+      page += "</h2>";
     }
     res.writeHead(200);
     res.end(hf.buildPage(req, page));
