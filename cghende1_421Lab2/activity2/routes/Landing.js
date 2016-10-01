@@ -14,7 +14,7 @@ Landing.handle = function(req, res) {
     for (var index in stories) {
       var story = stories[index];
       page += "<h2>";
-      if (story.public || req.loggedIn && story.author === req.username) {
+      if (story.public || req.loggedIn && req.role === "Subscriber" || req.loggedIn && req.username === story.author) {
         page += "<a href='/story/" + story.title + "/'>" + story.title + "</a>";
       } else {
         page += story.title;

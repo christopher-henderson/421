@@ -2,6 +2,7 @@ var fs = require('fs');
 var path = require("path");
 var url = require('url');
 
+var mime = require("../modules/mime.js");
 var r = require("../router/router.js");
 var Handler = r.Handler;
 
@@ -15,7 +16,9 @@ Static.handle = function(req, res) {
       res.end(JSON.stringify(err));
       return;
     }
-    res.writeHead(200);
+    res.writeHead(200, {
+      "Content-Type": mime(urlObj.pathname)
+    });
     res.end(data);
   });
 };
