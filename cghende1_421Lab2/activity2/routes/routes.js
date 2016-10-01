@@ -4,6 +4,7 @@ var Landing = require("./Landing.js");
 var Login = require("./LoginPage.js");
 var Story = require("./Story.js");
 var CreateStory = require("./CreateStory.js");
+var Edit = require("./Edit.js");
 
 module.exports = [
   ['^/login/?$', Login],
@@ -12,6 +13,6 @@ module.exports = [
   ['^/logoutAction.*', LoginLogout.Logout],
   ['^/?$', Landing],
   ['^/create/?$', CreateStory],
-  ['^createStory$'],
+  ['^/edit/.*$', Edit],
   ['^.*$', Static],
 ];

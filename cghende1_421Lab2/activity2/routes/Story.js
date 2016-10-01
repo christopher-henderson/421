@@ -30,6 +30,10 @@ StoryHandler.handle = function(req, res) {
       return ROOT + path.sep + "news" + path.sep + file;
     });
     f.concatenate(fragments, function(data) {
+      if (storyObj.author === req.username) {
+        var edit = "<a href='/edit/" + storyObj.title + "'>Edit</a><br>";
+        data = edit + data;
+      }
       res.writeHead(202);
       res.end(hf.buildPage(req, data));
     });
