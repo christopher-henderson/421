@@ -18,7 +18,7 @@ LOGOUT = "<form action='/logoutAction' method='GET'>\n";
 LOGOUT += "<button type='submit'>Logout</button>\n";
 LOGOUT += "</form>\n";
 
-CREATESTORY = "<h3><a href='/createPage/'>Create a Story</h3>";
+CREATESTORY = "<h3><a href='/news/createStory.html'>Create a Story</a></h3>";
 
 FOOTER = "</body>\n";
 FOOTER += "</html>\n";

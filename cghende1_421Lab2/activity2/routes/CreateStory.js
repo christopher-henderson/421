@@ -16,10 +16,13 @@ CreateStory.handle = function(req, res) {
     var args = qstring.parse(data);
     var normalizedName = s.normalizeName(args.Title);
     var filePath = ROOT + path.sep + normalizedName + ".story";
+    args.Fragments = args.Fragments.filter(function(frag) {
+      return frag !== "";
+    });
     s.saveFragments(args.Title, args.Fragments, function(fragNames) {
       args.Fragments = fragNames;
       fs.writeFile(filePath, JSON.stringify(args), function(err) {
-        res.writeHead(302, "Location: /");
+        res.writeHead(302, {"Location": "/"});
         res.end();
       });
     });

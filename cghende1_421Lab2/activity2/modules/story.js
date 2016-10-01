@@ -42,14 +42,18 @@ saveFragments = function(title, fragments, callback) {
 };
 
 function normalizeName(story) {
-  storyName = story.trim();
+  var storyName = story.trim();
   storyName = storyName.slice(
     (storyName.startsWith("/")) ? 1 : 0,
     (storyName.endsWith("/")) ? storyName.length - 1 : storyName.length
   );
   storyName = storyName.toLowerCase();
-  storyName = storyName.replace(/%20./g, function(s) {
-    return s.slice(3).toUpperCase();
+  storyName = storyName.replace(/(%20| )./g, function(s) {
+    if (s.startsWith("%20")) {
+      return s.slice(3).toUpperCase();
+    } else {
+      return s.slice(1).toUpperCase();
+    }
   });
   return storyName;
 }
