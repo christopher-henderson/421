@@ -33,13 +33,19 @@ Edit.handle = function(req, res) {
   var storyName = urlObj.pathname.slice(6);
   s.getStory(storyName, function(err, data) {
     var story = new s.Story(JSON.parse(data));
+    if (story.author !== req.username || req.role !== "Reporter") {
+      res.writeHead(403);
+      res.end(hf.buildPage(req, "Unauthorized"));
+    }
     var isPublic = (story.public) ? "checked" : "";
     var isPrivate = (story.public) ? "" : "checked";
     getFragments(story.fragments, function(frags) {
       var body = `<!DOCTYPE html>
         <html>
         <body>
-
+        <br>
+          <a href="/confirm/${storyName}"<button type='submit'>DELETE</button></a>
+        <br>
         <form action='/create' method='POST' enctype="application/json">
           Title: <input type='text' name='Title' value="${story.title}" pattern='.+'/><br>
           Author: <input type='text' name='Author' value="${story.author}" pattern='.+'/><br>

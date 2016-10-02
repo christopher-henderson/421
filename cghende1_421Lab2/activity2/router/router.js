@@ -2,6 +2,7 @@ var url = require('url');
 var qstring = require('querystring');
 
 var c = require("../cookies/cookies.js");
+var hf = require("../modules/HeaderFooter.js")
 
 function Router() {
 
@@ -48,7 +49,7 @@ var NotFound = Object.create(Handler);
 NotFound.handle = function(req, res) {
   console.log('404');
   res.writeHead(404);
-  res.end('lol no');
+  res.end(hf.buildPage(req, "Not Found."));
 };
 
 exports.Handler = Handler;
