@@ -8,27 +8,6 @@ var f = require("../modules/file.js");
 var hf = require("../modules/HeaderFooter.js");
 var Handler = r.Handler;
 
-// <!DOCTYPE html>
-// <html>
-// <body>
-//
-// <form action='/create' method='POST' enctype="application/json">
-//   Title: <input type='text' name='Title' pattern='.+'/><br>
-//   Author: <input type='text' name='Author' pattern='.+'/><br>
-//   Public: <input type='radio' name='Public' value='yes' checked>
-//   Private: <input type='radio' name='Public' value='no'><br>
-//   Fragements: <input type="text" name="Fragments">
-//               <input type="text" name="Fragments">
-//               <input type="text" name="Fragments">
-//               <input type="text" name="Fragments">
-//               <input type="text" name="Fragments">
-//               <input type="text" name="Fragments">
-//   <button type='submit'>Submit</button>
-// </form>
-//
-// </body>
-// </html>
-
 function getFragments(files, callback) {
   var ROOT = path.dirname(__dirname);
   var filePath = ROOT + path.sep + "news" + path.sep;

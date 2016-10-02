@@ -30,7 +30,7 @@ StoryHandler.handle = function(req, res) {
       return ROOT + path.sep + "news" + path.sep + file;
     });
     f.concatenate(fragments, function(data) {
-      if (storyObj.author === req.username) {
+      if (storyObj.author === req.username && req.role === "Reporter") {
         var edit = "<a href='/edit/" + storyObj.title + "'>Edit</a><br>";
         data = edit + data;
       }
