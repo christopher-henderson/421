@@ -1,9 +1,8 @@
-const fs = require('fs');
-const http = require('http');
-const url = require('url');
-const qstring = require('querystring');
-const templateRoot = 'news/';
-var mimeTypes=new Object;
+var fs = require('fs');
+var url = require('url');
+var qstring = require('querystring');
+var templateRoot = 'news/';
+var mimeTypes = {};
 
 var path = require('path');
 var express = require('express');
@@ -292,23 +291,23 @@ function createStory(req,res,userDict,edit) {
   });
   req.on('end', function () {
     var postData = qstring.parse(jsonData);
-    var filename=postData['filename']+".story";
+    var filename=postData.filename + ".story";
     console.log(filename);
-    var aa=postData['Fragments'].split(",")
+    var aa = postData.Fragments.split(",");
     var array=[];
-    for( b in aa){
-      array.push(aa[b].trim())
+    for(var b in aa){
+      array.push(aa[b].trim());
     }
-    var fileContent ={Title: postData['Title'],
-                      Author: postData['Author'],
-                      Public: postData['Public'],
+    var fileContent ={Title: postData.Title,
+                      Author: postData.Author,
+                      Public: postData.Public,
                       Fragments: array
                     };
-    var fileContent = JSON.stringify(fileContent);
+    fileContent = JSON.stringify(fileContent);
     //write filecontent to the .story file
     fs.writeFile(filename, fileContent, function(err) {
-         console.error(err)
-   })
+         console.error(err);
+   });
   });
   if(edit){
     res.redirect("/");
@@ -325,119 +324,14 @@ function createHTML(userDict,req,res) {
   });
   req.on('end', function () {
     var postData = qstring.parse(jsonData);
-    var filename= templateRoot+postData['filename']+".html";
-    var fileContent =postData['text'];
+    var filename = templateRoot + postData.filename + ".html";
+    var fileContent = postData.text;
     fs.writeFile(filename, fileContent, function(err) {
-         console.error(err)
-   })
+         console.error(err);
+   });
   });
-
   res.redirect("/");
 }
-
-function buildHtmlListEntries(htmlString, files, index, userDict, templateToString, res) {
-    //console.log("INDEX is " + index + "\t HTML buffer is \n" + htmlString);
-    if (index >= files.length) {
-        var renderedTemplate = templateToString.replace("{{includeHTML}}", htmlString);
-        renderedTemplate = renderedTemplateWithUsername(renderedTemplate, userDict.username, userDict.role);
-        res.end(renderedTemplate);
-    } else {
-        //console.log("Processing " + files[index]);
-        if(files[index].indexOf(".story") > -1 ) {
-          fs.readFile(files[index], function(err, fc) {
-            var fc1 = JSON.parse(fc.toString());
-            // Business logic: if the role is Guest then see all public
-            // if role is Subscriber sees all
-            // if role is Reporter see all public and all nonpublic you authored
-            if (userDict.role === "Reporter" && userDict.username === fc1.Author) {
-                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a> "
-                htmlString += "&nbsp;&nbsp;<a href='/editPage?name="+files[index]+"'>Edit</a>"
-                htmlString += "&nbsp;&nbsp;<a href='/delete?name="+files[index]+"'>Delete</a><br/>";
-            } else if (fc1.Public == ("yes") || fc1.Public == ("Yes")) {
-                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a><br/>";
-            } else if (userDict.role === "Subscriber") {
-                // We are a subscriber so we see all
-                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a><br/>";
-            }
-            return buildHtmlListEntries(htmlString, files, index+1, userDict, templateToString, res);
-          });
-        } else {
-            return buildHtmlListEntries(htmlString, files, index+1, userDict, templateToString, res);
-        }
-    }
-}
-
-/*
-  This is really nasty in that you want to read the files first and then go into each one individually
-*/
-// function getStories(userDict, templateToString, res) {
-//     var htmlSegment = "<h3>Stories</h3>\n";
-//     fs.readdir(__dirname, function(err, files) {
-//         buildHtmlListEntries(htmlSegment, files, 0, userDict, templateToString, res);
-//     });
-// }
-
-// function renderHome(userDict, res) {
-//   fs.readFile(templateRoot+'index.html',function(err,data){
-//     res.setHeader("Content-Type", "text/html");
-//     res.writeHead(200);
-//     var templateToString = data.toString();
-//     if(userDict.role==="Reporter"){
-//       templateToString += "<a href='/addStoryPage/'>Create New Story</a><br/>";
-//     }
-//     getStories(userDict, templateToString, res);
-//   });
-// }
-
-// function renderStory(userDict, path, res) {
-//   var renderedTemplate = '';
-//   fs.readFile(templateRoot + 'header.html', function(err, data) {
-//       renderedTemplate += data.toString();
-//       var templateToString = data.toString();
-//       var renderedTemplate = templateToString;
-//       var uname=userDict.username;
-//       var role=userDict.role;
-//       var renderedTemplate = renderedTemplateWithUsername(templateToString, uname,role);
-//       getStoryFile(path, res, renderedTemplate);
-//   });
-// }
-
-// function getStoryFile(path, res, renderedTemplate) {
-//   path = path.split('/');
-//   path = path[path.length - 1];
-//   fs.readFile(path,function(err,data){
-//       var storyTemplate = data.toString();
-//       var storyTemplateDict = JSON.parse(storyTemplate.toString());
-//       getStory(path, res, renderedTemplate, storyTemplateDict['Fragments'],0);
-//     });
-// }
-
-// function getStory(path, res, renderedTemplate, fragments, count) {
-//   if (count >= fragments.length) {
-//       renderFooter(res, renderedTemplate);
-//   } else {
-//     fs.readFile(templateRoot + fragments[count], function(err, data) {
-//        renderedTemplate += data.toString();
-//        getStory(path, res, renderedTemplate, fragments, count+1);
-//     });
-//   }
-// }
-
-// function renderFooter(res, renderedTemplate) {
-//   fs.readFile(templateRoot + 'footer.html', function(err, data) {
-//       renderedTemplate += data.toString();
-//       res.end(renderedTemplate);
-//   });
-// }
-
-// function renderGeneric(res, templateName) {
-//   fs.readFile(templateRoot+templateName,function(err,data){
-//     res.setHeader("Content-Type", "text/html");
-//     res.writeHead(200);
-//     var renderedTemplate = data.toString();
-//     res.end(renderedTemplate);
-//   });
-// }
 
 function login(req,res) {
   var bodyData = "";
@@ -469,35 +363,3 @@ function logout(res) {
    });
    res.end();
 }
-
-// function renderedTemplateWithUsername(renderedTemplate, username, role) {
-//   renderedTemplate = renderedTemplate.replace("{{welcome}}","Welcome "+username);
-//   renderedTemplate = renderedTemplate.replace("{{role}}",role);
-//   if (role==='Guest') {
-//     renderedTemplate = renderedTemplate.replace("{{loginURL}}","/login/");
-//     renderedTemplate = renderedTemplate.replace("{{login}}","login");
-//   } else {
-//     renderedTemplate = renderedTemplate.replace("{{loginURL}}","/logout/");
-//     renderedTemplate = renderedTemplate.replace("{{login}}","logout");
-//   }
-//   return renderedTemplate;
-// }
-
-// function renderMedia(res, mediaPath) {
-//   mediaPath = mediaPath.slice(1);
-//   mimeType = 'application/octet-stream';  // default if we do not find one
-//   fs.readFile(mediaPath, function(err, data) {
-//     if (err) {
-//         console.log(err);
-//         clientError(res, 400, "Error processing media file");
-//     } else {
-//         ext = mediaPath.split('.');
-//         if (ext.length > 1) { // we found a file extension
-//             if (mimeTypes[ext[1]] != undefined) mimeType = mimeTypes[ext[1]];
-//         }
-//         console.log('Writing media file ' + mediaPath + ' with MIME type ' + mimeType);
-//         res.writeHead(200, { 'Content-Type': mimeType });
-//         res.end(data);
-//     }
-//   });
-// }
