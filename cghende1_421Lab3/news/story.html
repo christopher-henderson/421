@@ -1,0 +1,19 @@
+<html>
+<body>
+  <center>
+    <h1>Welcome <%= username %></h1>
+    <h1>Role: <%= role %></h1>
+    <a href="/">home</a>
+    <%if (role === "Guest") { %>
+      <a href="/login/">login</a>
+    <% } else { %>
+      <a href="/logout/">logout</a>
+    <% } %>
+
+    <% for(var i=0; i<fragments.length; i++) { %>
+      <%- fragments[i] %>
+    <% } %>
+
+</center>
+</body>
+</html>

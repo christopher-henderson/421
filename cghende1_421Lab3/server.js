@@ -5,47 +5,167 @@ const qstring = require('querystring');
 const templateRoot = 'news/';
 var mimeTypes=new Object;
 
-var app = require('express')();
+var path = require('path');
+var express = require('express');
+var app = express();
+var cookieparser = require('cookie-parser')();
+var ejs = require('ejs');
+
+function Story(options) {
+  this.title = options.Title;
+  this.author = options.Author;
+  this.public = (options.Public === "no") ? false : true;
+  this.fragments = options.Fragments;
+  this.file = options.file;
+}
+
+function getStories(callback) {
+  var result = [];
+  var ROOT = __dirname;
+
+  fs.readdir(ROOT, function(err, files) {
+    var stories = files.filter(function(f) {
+      return f.endsWith(".story");
+    });
+    var paths = stories.map(function(f) {
+      return ROOT + path.sep + f;
+    });
+    function inner(error, data) {
+      var fileName = path.basename(paths.pop());
+      var obj = JSON.parse(data);
+      obj.file = fileName;
+      result.push(new Story(obj));
+      if (paths.length > 0) {
+          fs.readFile(paths[paths.length - 1], 'utf-8', inner);
+      } else {
+        callback(result);
+      }
+    }
+    fs.readFile(paths[paths.length - 1], 'utf-8', inner);
+  });
+}
+
+function renderStory(story, callback) {
+  var fullpath = path.join(__dirname, path.basename(story));
+  fs.readFile(fullpath, 'utf-8', function(err, data) {
+    var obj = JSON.parse(obj);
+    obj.file = path.basename(fullpath);
+    var story = new Story(obj);
+    var fragmentPaths = story.fragments.map(function(fragment) {
+      return path.join("news", fragment);
+    });
+    var HTMLFragments = [];
+    function inner(err, data) {
+      HTMLFragments.push(data);
+      if (fragmentPaths.length > 0) {
+        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+      } else {
+        app.render("story.html")
+      }
+    }
+    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+  });
+}
+
+app.set('views', './news');
+
+app.engine('html', ejs.renderFile);
+
+app.use(cookieparser);
+
+app.use(function(req, res, next) {
+  // Step 1: Process headers. In this case, find the cookie
+  var usernameDict = { username: "Jane Doe", role: "Guest" };
+  var cookies = req.cookies;
+  if (cookies.username !== undefined && cookies.role !== undefined) {
+      usernameDict = {username: cookies.username, role: cookies.role};
+  }
+  req.usernameDict = usernameDict;
+  next();
+});
+
+app.use('/media', express.static('media'));
 
 app.all('/', function(req, res) {
   res.writeHead(302, {Location: '/landing.html'});
   res.end();
 });
 
-app.get('/landing.html', function(req, res) {
-  console.log(req);
-  renderHome(req.usernameDict, res);
+app.get('^/landing.html$', function(req, res) {
+  getStories(function(stories) {
+    app.render("index.html", {
+      username: req.usernameDict.username,
+      role: req.usernameDict.role,
+      stories: stories
+    }, function(err, html) {
+      res.send(html);
+    });
+  });
 });
 
-app.post('/login/', function(req, res) {
+app.post('^/login/?$', function(req, res) {
   login(req, res);
 });
 
-app.get('/login/', function(req, res) {
-  renderGeneric(res, 'login.html');
+app.get('^/login/?$', function(req, res) {
+  app.render("login.html", function(err, html) {
+    res.send(html);
+  });
+  // renderGeneric(res, 'login.html');
 });
 
-app.all('/logout', function(req, res) {
+app.all('^/logout/?$', function(req, res) {
   logout(res);
 });
 
 app.all('^*.story$', function(req, res) {
-  renderStory(req.usernameDict, req.path, res);
+  var fullpath = path.join(__dirname, path.basename(req.path));
+  fs.readFile(fullpath, 'utf-8', function(err, data) {
+    var obj = JSON.parse(data);
+    obj.file = path.basename(fullpath);
+    var story = new Story(obj);
+    var fragmentPaths = story.fragments.map(function(fragment) {
+      return path.join("news", fragment);
+    });
+    var HTMLFragments = [];
+    function inner(err, data) {
+      HTMLFragments.push(data);
+      if (fragmentPaths.length > 0) {
+        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+      } else {
+        app.render("story.html",
+          {
+            username: req.usernameDict.username,
+            role: req.usernameDict.role,
+            story: story,
+            fragments: HTMLFragments
+          },
+          function(err, html) {
+            res.send(html);
+          }
+        );
+      }
+    }
+    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+  });
 });
 
-app.all('/media', function(req, res) {
+app.all('^/media/*$', function(req, res) {
+
   renderMedia(res, req.path);
 });
 
-app.all('/addStoryPage/', function(req, res) { // endpoint for adding
+app.all('^/addStoryPage/?$', function(req, res) { // endpoint for adding
   if (req.usernameDict.role != 'Reporter') {
       clientError(res, 403, "You are not authorized to use this page");
   } else {
-      renderGeneric(res, 'addStoryPage.html');
+    app.render("addStoryPage.html", function(err, html) {
+      res.send(html);
+    });
   }
 });
 
-app.all('/editPage', function(req, res){
+app.all('^/editPage/?$', function(req, res){
   if (req.usernameDict.role != 'Reporter') {
       clientError(res, 403, "You are not authorized to use this page");
   } else {
@@ -53,7 +173,15 @@ app.all('/editPage', function(req, res){
   }
 });
 
-app.post('/editMetadata', function(req, res) {
+app.post("^/metadata/?$", function(req, res) {
+  if (req.usernameDict.role != 'Reporter') {
+      clientError(res, 403, "You are not authorized to use this page");
+  } else {
+      createStory(req,res,req.usernameDict,false);
+  }
+});
+
+app.post('^/editMetadata/?$', function(req, res) {
   if (req.usernameDict.role != 'Reporter') {
       clientError(res, 403, "You are not authorized to use this page");
   } else {
@@ -61,36 +189,21 @@ app.post('/editMetadata', function(req, res) {
   }
 });
 
-app.post('/html', function(req, res) {
-  if (usernameDict.role != 'Reporter') {
+app.post('^/html/?$', function(req, res) {
+  if (req.usernameDict.role != 'Reporter') {
       clientError(res, 403, "You are not authorized to use this page");
   } else {
       createHTML(req.usernameDict, req, res);
   }
 });
 
-app.all('.*delete.*', function(req, res) {
-  if (usernameDict.role != 'Reporter') {
+app.all('^/delete*$', function(req, res) {
+  if (req.usernameDict.role != 'Reporter') {
       clientError(res, 403, "You are not authorized to use this page");
   } else {
       deleteFile(req.usernameDict, req.url, res);
   }
 });
-
-app.use(function(req, res, next) {
-  // Step 1: Process headers. In this case, find the cookie
-  var usernameDict = { username: "Jane Doe", role: "Guest" };
-  var cookieString = req.headers.cookie;
-  //console.log("Cookie: " + cookieString);
-  if (cookieString !== undefined) {
-      cookieString = cookieString.replace("; ","&");
-      usernameDict = qstring.parse(cookieString);
-  }
-  req.usernameDict = usernameDict;
-  req.path = url.parse(req.url).pathname.toString().trim();
-  next();
-});
-
 
 app.listen(3030, initMimeTypes);
 
@@ -141,7 +254,7 @@ function deleteFile(userDict,requrl,res){
   //find its related html -_- also "are you sure u want to delete?"
   fs.unlink(fileToBeDeleted, function(err){
             if (err) throw err;
-            renderHome(userDict, res);
+            res.redirect("/");
        });
 }
 
@@ -198,9 +311,10 @@ function createStory(req,res,userDict,edit) {
    })
   });
   if(edit){
-    renderHome(userDict, res);
+    res.redirect("/");
    } else {
-    renderGeneric(res, 'addStoryPage.html');
+    res.redirect("/addStoryPage");
+    // renderGeneric(res, 'addStoryPage.html');
   }
 }
 
@@ -218,7 +332,7 @@ function createHTML(userDict,req,res) {
    })
   });
 
-  renderHome(userDict, res);
+  res.redirect("/");
 }
 
 function buildHtmlListEntries(htmlString, files, index, userDict, templateToString, res) {
@@ -238,12 +352,12 @@ function buildHtmlListEntries(htmlString, files, index, userDict, templateToStri
             if (userDict.role === "Reporter" && userDict.username === fc1.Author) {
                 htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a> "
                 htmlString += "&nbsp;&nbsp;<a href='/editPage?name="+files[index]+"'>Edit</a>"
-                htmlString += "&nbsp;&nbsp;<a href='/delete?name="+files[index]+"'>Delete</a><br>";
+                htmlString += "&nbsp;&nbsp;<a href='/delete?name="+files[index]+"'>Delete</a><br/>";
             } else if (fc1.Public == ("yes") || fc1.Public == ("Yes")) {
-                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a><br>";
+                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a><br/>";
             } else if (userDict.role === "Subscriber") {
                 // We are a subscriber so we see all
-                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a><br>";
+                htmlString += "<a href='/"+files[index]+"'>"+fc1.Title+"</a><br/>";
             }
             return buildHtmlListEntries(htmlString, files, index+1, userDict, templateToString, res);
           });
@@ -256,75 +370,74 @@ function buildHtmlListEntries(htmlString, files, index, userDict, templateToStri
 /*
   This is really nasty in that you want to read the files first and then go into each one individually
 */
-function getStories(userDict, templateToString, res) {
-    var htmlSegment = "<h3>Stories</h3>\n";
-    fs.readdir(__dirname, function(err, files) {
-        buildHtmlListEntries(htmlSegment, files, 0, userDict, templateToString, res);
-    });
-}
+// function getStories(userDict, templateToString, res) {
+//     var htmlSegment = "<h3>Stories</h3>\n";
+//     fs.readdir(__dirname, function(err, files) {
+//         buildHtmlListEntries(htmlSegment, files, 0, userDict, templateToString, res);
+//     });
+// }
 
-function renderHome(userDict, res) {
-  fs.readFile(templateRoot+'index.html',function(err,data){
-    res.setHeader("Content-Type", "text/html");
-    res.writeHead(200);
-    var templateToString = data.toString();
-    if(userDict.role==="Reporter"){
-      templateToString += "<a href='/addStoryPage/'>Create New Story</a><br>";
-    }
-    getStories(userDict, templateToString, res);
-  });
-}
+// function renderHome(userDict, res) {
+//   fs.readFile(templateRoot+'index.html',function(err,data){
+//     res.setHeader("Content-Type", "text/html");
+//     res.writeHead(200);
+//     var templateToString = data.toString();
+//     if(userDict.role==="Reporter"){
+//       templateToString += "<a href='/addStoryPage/'>Create New Story</a><br/>";
+//     }
+//     getStories(userDict, templateToString, res);
+//   });
+// }
 
-function renderStory(userDict, path, res) {
-  var renderedTemplate = '';
-  fs.readFile(templateRoot + 'header.html', function(err, data) {
-      renderedTemplate += data.toString();
-      var templateToString = data.toString();
-      var renderedTemplate = templateToString;
-      var uname=userDict.username;
-      var role=userDict.role;
+// function renderStory(userDict, path, res) {
+//   var renderedTemplate = '';
+//   fs.readFile(templateRoot + 'header.html', function(err, data) {
+//       renderedTemplate += data.toString();
+//       var templateToString = data.toString();
+//       var renderedTemplate = templateToString;
+//       var uname=userDict.username;
+//       var role=userDict.role;
+//       var renderedTemplate = renderedTemplateWithUsername(templateToString, uname,role);
+//       getStoryFile(path, res, renderedTemplate);
+//   });
+// }
 
-      var renderedTemplate = renderedTemplateWithUsername(templateToString, uname,role);
-      getStoryFile(path, res, renderedTemplate);
-  });
-}
+// function getStoryFile(path, res, renderedTemplate) {
+//   path = path.split('/');
+//   path = path[path.length - 1];
+//   fs.readFile(path,function(err,data){
+//       var storyTemplate = data.toString();
+//       var storyTemplateDict = JSON.parse(storyTemplate.toString());
+//       getStory(path, res, renderedTemplate, storyTemplateDict['Fragments'],0);
+//     });
+// }
 
-function getStoryFile(path, res, renderedTemplate) {
-  path = path.split('/');
-  path = path[path.length - 1];
-  fs.readFile(path,function(err,data){
-      var storyTemplate = data.toString();
-      var storyTemplateDict = JSON.parse(storyTemplate.toString());
-      getStory(path, res, renderedTemplate, storyTemplateDict['Fragments'],0);
-    });
-}
+// function getStory(path, res, renderedTemplate, fragments, count) {
+//   if (count >= fragments.length) {
+//       renderFooter(res, renderedTemplate);
+//   } else {
+//     fs.readFile(templateRoot + fragments[count], function(err, data) {
+//        renderedTemplate += data.toString();
+//        getStory(path, res, renderedTemplate, fragments, count+1);
+//     });
+//   }
+// }
 
-function getStory(path, res, renderedTemplate, fragments, count) {
-  if (count >= fragments.length) {
-      renderFooter(res, renderedTemplate);
-  } else {
-    fs.readFile(templateRoot + fragments[count], function(err, data) {
-       renderedTemplate += data.toString();
-       getStory(path, res, renderedTemplate, fragments, count+1);
-    });
-  }
-}
+// function renderFooter(res, renderedTemplate) {
+//   fs.readFile(templateRoot + 'footer.html', function(err, data) {
+//       renderedTemplate += data.toString();
+//       res.end(renderedTemplate);
+//   });
+// }
 
-function renderFooter(res, renderedTemplate) {
-  fs.readFile(templateRoot + 'footer.html', function(err, data) {
-      renderedTemplate += data.toString();
-      res.end(renderedTemplate);
-  });
-}
-
-function renderGeneric(res, templateName) {
-  fs.readFile(templateRoot+templateName,function(err,data){
-    res.setHeader("Content-Type", "text/html");
-    res.writeHead(200);
-    var renderedTemplate = data.toString();
-    res.end(renderedTemplate);
-  });
-}
+// function renderGeneric(res, templateName) {
+//   fs.readFile(templateRoot+templateName,function(err,data){
+//     res.setHeader("Content-Type", "text/html");
+//     res.writeHead(200);
+//     var renderedTemplate = data.toString();
+//     res.end(renderedTemplate);
+//   });
+// }
 
 function login(req,res) {
   var bodyData = "";
@@ -357,34 +470,34 @@ function logout(res) {
    res.end();
 }
 
-function renderedTemplateWithUsername(renderedTemplate, username, role) {
-  renderedTemplate = renderedTemplate.replace("{{welcome}}","Welcome "+username);
-  renderedTemplate = renderedTemplate.replace("{{role}}",role);
-  if (role==='Guest') {
-    renderedTemplate = renderedTemplate.replace("{{loginURL}}","/login/");
-    renderedTemplate = renderedTemplate.replace("{{login}}","login");
-  } else {
-    renderedTemplate = renderedTemplate.replace("{{loginURL}}","/logout/");
-    renderedTemplate = renderedTemplate.replace("{{login}}","logout");
-  }
-  return renderedTemplate;
-}
+// function renderedTemplateWithUsername(renderedTemplate, username, role) {
+//   renderedTemplate = renderedTemplate.replace("{{welcome}}","Welcome "+username);
+//   renderedTemplate = renderedTemplate.replace("{{role}}",role);
+//   if (role==='Guest') {
+//     renderedTemplate = renderedTemplate.replace("{{loginURL}}","/login/");
+//     renderedTemplate = renderedTemplate.replace("{{login}}","login");
+//   } else {
+//     renderedTemplate = renderedTemplate.replace("{{loginURL}}","/logout/");
+//     renderedTemplate = renderedTemplate.replace("{{login}}","logout");
+//   }
+//   return renderedTemplate;
+// }
 
-function renderMedia(res, mediaPath) {
-  mediaPath = mediaPath.slice(1);
-  mimeType = 'application/octet-stream';  // default if we do not find one
-  fs.readFile(mediaPath, function(err, data) {
-    if (err) {
-        console.log(err);
-        clientError(res, 400, "Error processing media file");
-    } else {
-        ext = mediaPath.split('.');
-        if (ext.length > 1) { // we found a file extension
-            if (mimeTypes[ext[1]] != undefined) mimeType = mimeTypes[ext[1]];
-        }
-        console.log('Writing media file ' + mediaPath + ' with MIME type ' + mimeType);
-        res.writeHead(200, { 'Content-Type': mimeType });
-        res.end(data);
-    }
-  });
-}
+// function renderMedia(res, mediaPath) {
+//   mediaPath = mediaPath.slice(1);
+//   mimeType = 'application/octet-stream';  // default if we do not find one
+//   fs.readFile(mediaPath, function(err, data) {
+//     if (err) {
+//         console.log(err);
+//         clientError(res, 400, "Error processing media file");
+//     } else {
+//         ext = mediaPath.split('.');
+//         if (ext.length > 1) { // we found a file extension
+//             if (mimeTypes[ext[1]] != undefined) mimeType = mimeTypes[ext[1]];
+//         }
+//         console.log('Writing media file ' + mediaPath + ' with MIME type ' + mimeType);
+//         res.writeHead(200, { 'Content-Type': mimeType });
+//         res.end(data);
+//     }
+//   });
+// }
