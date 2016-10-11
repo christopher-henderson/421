@@ -1,0 +1,25 @@
+<html>
+<body>
+  <center>
+    <h1>Welcome <%= username %></h1>
+    <h1>Role: <%= role %></h1>
+    <%if (role === "Guest") { %>
+      <a href="/login/">login</a>
+    <% } else { %>
+      <a href="/logout/">logout</a>
+    <% } %>
+
+    <h1>Confirm order of <%= session.story.Title %></h1>
+
+    Email: <%= session.email %><br>
+    Address: <%= session.address %><br>
+    Billing Address: <%= session.billingAddress %><br>
+    CreditCard: <%= session.creditCard %><br>
+
+    <form action="/confirmed/" method="get">
+      <button type="submit">Submit</button><br>
+    </form>
+
+  </center>
+</body>
+</html>

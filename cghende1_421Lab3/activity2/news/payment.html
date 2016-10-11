@@ -1,0 +1,22 @@
+<html>
+<body>
+  <center>
+    <h1>Welcome <%= username %></h1>
+    <h1>Role: <%= role %></h1>
+    <%if (role === "Guest") { %>
+      <a href="/login/">login</a>
+    <% } else { %>
+      <a href="/logout/">logout</a>
+    <% } %>
+
+    <h1>Payment</h1>
+
+    <form action="/confirmation/">
+      Billing Address: <input type="text" name="billingAddress" value="<%= session.address %>"><br>
+      Credit Card: <input type="text" name="creditCard" pattern="\d+" />
+      Submit: <input type="submit"><br>
+    </form>
+
+  </center>
+</body>
+</html>

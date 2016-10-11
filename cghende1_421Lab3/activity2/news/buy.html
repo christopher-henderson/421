@@ -1,0 +1,23 @@
+<html>
+<body>
+  <center>
+    <h1>Welcome <%= username %></h1>
+    <h1>Role: <%= role %></h1>
+    <%if (role === "Guest") { %>
+      <a href="/login/">login</a>
+    <% } else { %>
+      <a href="/logout/">logout</a>
+    <% } %>
+
+    <h1>Buy <%= story.Title %></h1>
+
+    <form action="/payment/">
+      Email: <input type="email" name="email"><br>
+      Address: <input type="text" name="address"><br>
+      Submit: <input type="submit"><br>
+      <input type="hidden" name="story" value='<%- JSON.stringify(story) %>'>
+    </form>
+
+  </center>
+</body>
+</html>
