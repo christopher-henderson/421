@@ -12,13 +12,15 @@
     <h3>Stories</h3>
 
     <% for(var i=0; i<stories.length; i++) { %>
-      <%if (stories[i].public || stories[i].author === username) { %>
+      <%if (stories[i].public || role === "Subscriber" || stories[i].author === username) { %>
         <a href='/<%= stories[i].file %>'><%= stories[i].title %></a>
-        <%if (stories[i].author === username && role === "Reporter") { %>
-          &nbsp;&nbsp;<a href='/editPage?name=<%= stories[i].file %>'>Edit</a>&nbsp;&nbsp;<a href='/delete?name=<%= stories[i].file %>'>Delete</a><br>
-        <% } %>
-        <br>
+      <% } else { %>
+        <%= stories[i].title %>
       <% } %>
+      <%if (stories[i].author === username && role === "Reporter") { %>
+        &nbsp;&nbsp;<a href='/editPage?name=<%= stories[i].file %>'>Edit</a>&nbsp;&nbsp;<a href='/delete?name=<%= stories[i].file %>'>Delete</a><br>
+      <% } %>
+      <br>
     <% } %>
 
   </center>
