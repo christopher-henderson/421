@@ -12,9 +12,10 @@
     <h1>Buy <%= story.Title %></h1>
 
     <form action="/payment/">
-      Email: <input type="email" name="email"><br>
-      Address: <input type="text" name="address"><br>
-      Submit: <input type="submit"><br>
+      Email: <input type="email" name="email" value="<%= session.email %>"><br>
+      Address: <input type="text" name="address" value="<%= session.address %>"><br>
+      Submit: <input type="submit" name="action" value="submit"><br>
+      Save: <input type="submit" name="action" value="save"><br>
       <input type="hidden" name="story" value='<%- JSON.stringify(story) %>'>
     </form>
 

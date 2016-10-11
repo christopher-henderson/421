@@ -53,7 +53,8 @@ app.get('^/landing.html$', function(req, res) {
     app.render("index.html", {
       username: req.usernameDict.username,
       role: req.usernameDict.role,
-      stories: stories
+      stories: stories,
+      session: req.session
     }, function(err, html) {
       res.send(html);
     });
@@ -77,50 +78,70 @@ app.all('^/logout/?$', function(req, res) {
 app.get("^/buy/*.story$", function(req, res) {
   var fileName = path.basename(req.path);
   getStory(fileName, function(story) {
+    req.session.stage = req.path;
     app.render("buy.html",
       {
         story: story,
         username: req.usernameDict.username,
-        role: req.usernameDict.role
+        role: req.usernameDict.role,
+        session: req.session
       }, function(err, html) {
+        if (err) {
+          console.log(err);
+        }
         res.send(html);
     });
   });
 });
 
 app.get("^/payment/*$", function(req, res) {
-  req.session.email = req.query.email;
-  req.session.address = req.query.address;
-  req.session.story = new Story(JSON.parse(req.query.story));
-  app.render("payment.html",
-    {
-      username: req.usernameDict.username,
-      role: req.usernameDict.role,
-      session: req.session
-    }, function(err, html){
-      res.send(html);
-  });
+  req.session.email = req.query.email || req.session.email;
+  req.session.address = req.query.address || req.session.address;
+  req.session.billingAddress = req.session.billingAddress || req.session.address;
+  req.session.story = (req.query.story !== undefined) ? new Story(JSON.parse(req.query.story)) : req.session.story;
+  if (req.query.action === "save") {
+      res.redirect("/");
+  } else {
+    req.session.stage = "/payment/";
+    app.render("payment.html",
+      {
+        username: req.usernameDict.username,
+        role: req.usernameDict.role,
+        session: req.session
+      }, function(err, html){
+        res.send(html);
+    });
+  }
 });
 
 app.get("^/confirmation/*$", function(req, res) {
-  req.session.creditCard = req.query.creditCard;
-  req.session.billingAddress = req.query.billingAddress;
-  app.render("confirmation.html", {
-    username: req.usernameDict.username,
-    role: req.usernameDict.role,
-    session: req.session
-  }, function(err, html) {
-    if (err) {
-      console.log(err);
-    }
-    res.send(html);
-  });
+  req.session.creditCard = req.query.creditCard || req.session.creditCard;
+  req.session.billingAddress = req.query.billingAddress || req.session.billingAddress;
+  if (req.query.action === "save") {
+    res.redirect("/");
+  } else {
+    req.session.stage = "/confirmation/";
+    app.render("confirmation.html", {
+      username: req.usernameDict.username,
+      role: req.usernameDict.role,
+      session: req.session
+    }, function(err, html) {
+      if (err) {
+        console.log(err);
+      }
+      res.send(html);
+    });
+  }
 });
 
 app.get("^/confirmed/?$", function(req, res) {
-  var story = req.session.story;
-  req.session = null;
-  res.redirect("/" + story.File);
+  if (req.query.action === "submit") {
+    var story = req.session.story;
+    req.session = null;
+    res.redirect("/" + story.File);
+  } else {
+    res.redirect("/");
+  }
 });
 
 app.all('^*.story$', function(req, res) {

@@ -12,9 +12,10 @@
     <h1>Payment</h1>
 
     <form action="/confirmation/">
-      Billing Address: <input type="text" name="billingAddress" value="<%= session.address %>"><br>
-      Credit Card: <input type="text" name="creditCard" pattern="\d+" />
-      Submit: <input type="submit"><br>
+      Billing Address: <input type="text" name="billingAddress" value="<%= session.billingAddress %>"><br>
+      Credit Card: <input type="text" name="creditCard" pattern="\d+", value="<%= session.creditCard %>"><br>
+      Submit: <input type="submit" name="action" value="submit"><br>
+      Save: <input type="submit" name="action" value="save"><br>
     </form>
 
   </center>
