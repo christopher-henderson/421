@@ -14,9 +14,13 @@
     <form action="/payment/">
       Email: <input type="email" name="email" value="<%= session.email %>"><br>
       Address: <input type="text" name="address" value="<%= session.address %>"><br>
-      Submit: <input type="submit" name="action" value="submit"><br>
-      Save: <input type="submit" name="action" value="save"><br>
+      <input type="submit" name="action" value="Submit">
+      <input type="submit" name="action" value="Save"><br>
       <input type="hidden" name="story" value='<%- JSON.stringify(story) %>'>
+    </form>
+
+    <form action="/cancel/">
+      <input type="submit" value="Cancel"><br>
     </form>
 
   </center>

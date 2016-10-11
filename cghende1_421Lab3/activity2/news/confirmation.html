@@ -16,9 +16,13 @@
     Billing Address: <%= session.billingAddress %><br>
     CreditCard: <%= session.creditCard %><br>
 
-    <form action="/confirmed/" method="get">
-      Submit: <input type="submit" name="action" value="submit"><br>
-      Save: <input type="submit" name="action" value="save"><br>
+    <form action="/confirmed/">
+      <input type="submit" name="action" value="Submit">
+      <input type="submit" name="action" value="Save"><br>
+    </form>
+
+    <form action="/cancel/">
+      <input type="submit" value="Cancel"><br>
     </form>
 
   </center>

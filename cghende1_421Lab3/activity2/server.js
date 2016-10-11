@@ -99,7 +99,7 @@ app.get("^/payment/*$", function(req, res) {
   req.session.address = req.query.address || req.session.address;
   req.session.billingAddress = req.session.billingAddress || req.session.address;
   req.session.story = (req.query.story !== undefined) ? new Story(JSON.parse(req.query.story)) : req.session.story;
-  if (req.query.action === "save") {
+  if (req.query.action === "Save") {
       res.redirect("/");
   } else {
     req.session.stage = "/payment/";
@@ -117,7 +117,7 @@ app.get("^/payment/*$", function(req, res) {
 app.get("^/confirmation/*$", function(req, res) {
   req.session.creditCard = req.query.creditCard || req.session.creditCard;
   req.session.billingAddress = req.query.billingAddress || req.session.billingAddress;
-  if (req.query.action === "save") {
+  if (req.query.action === "Save") {
     res.redirect("/");
   } else {
     req.session.stage = "/confirmation/";
@@ -135,13 +135,18 @@ app.get("^/confirmation/*$", function(req, res) {
 });
 
 app.get("^/confirmed/?$", function(req, res) {
-  if (req.query.action === "submit") {
-    var story = req.session.story;
-    req.session = null;
-    res.redirect("/" + story.File);
-  } else {
+  if (req.query.action === "Save") {
     res.redirect("/");
+  } else {
+    var story = req.session.story;
+    req.session.destroy();
+    res.redirect("/" + story.File);
   }
+});
+
+app.get("^/cancel/?$", function(req, res){
+  req.session.destroy();
+  res.redirect("/");
 });
 
 app.all('^*.story$', function(req, res) {

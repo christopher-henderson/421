@@ -18,7 +18,7 @@
       <%if (stories[i].Public || role === "Subscriber" || stories[i].Author === username) { %>
         <a href='/<%= stories[i].File %>'><%= stories[i].Title %></a>
       <% } else { %>
-        <%= stories[i].Title %> <a href='/buy/<%= stories[i].File %>'>Buy</a>
+        <%= stories[i].Title %>: <strong><i><a href='/buy/<%= stories[i].File %>'>Buy!</a></i></strong>
       <% } %>
       <%if (stories[i].Author === username && role === "Reporter") { %>
         &nbsp;&nbsp;<a href='/editPage?name=<%= stories[i].File %>'>Edit</a>&nbsp;&nbsp;<a href='/delete?name=<%= stories[i].File %>'>Delete</a><br>
