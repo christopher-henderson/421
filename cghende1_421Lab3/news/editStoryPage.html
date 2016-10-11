@@ -3,12 +3,17 @@
   <center>
     <h3>Create Story</h3>
     <form action="/editMetadata" method="post">
-      Title: <input type="text" name="Title" value={{title}}><br>
-      Author: <input type="text" name="Author" value={{author}}><br>
-      Public: <input type="radio" name="Public" value="yes" {{yesCheck}}> Yes
-      <input type="radio" name="Public" value="no" {{noCheck}}> No<br>
-      Fragments: <input type="text" name="Fragments" value={{fragments}}><br>
-      Filename: <input type="text" name="filename" value={{filename}} readonly><br>
+      Title: <input type="text" name="Title" value=<%= title %>><br>
+      Author: <input type="text" name="Author" value=<%= author %>><br>
+      <%if (isPublic) { %>
+        Public: <input type="radio" name="Public" value="yes" checked> Yes
+        <input type="radio" name="Public" value="no"> No<br>
+      <% } else { %>
+        Public: <input type="radio" name="Public" value="yes"> Yes
+        <input type="radio" name="Public" value="no" checked> No<br>
+      <% } %>
+      Fragments: <input type="text" name="Fragments" value=<%= fragments %>><br>
+      Filename: <input type="text" name="filename" value=<%= filename %> readonly><br>
       <input type="submit" value="Edit Story">
     </form>
 

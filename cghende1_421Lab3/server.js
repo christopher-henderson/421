@@ -18,54 +18,6 @@ function Story(options) {
   this.file = options.file;
 }
 
-function getStories(callback) {
-  var result = [];
-  var ROOT = __dirname;
-
-  fs.readdir(ROOT, function(err, files) {
-    var stories = files.filter(function(f) {
-      return f.endsWith(".story");
-    });
-    var paths = stories.map(function(f) {
-      return ROOT + path.sep + f;
-    });
-    function inner(error, data) {
-      var fileName = path.basename(paths.pop());
-      var obj = JSON.parse(data);
-      obj.file = fileName;
-      result.push(new Story(obj));
-      if (paths.length > 0) {
-          fs.readFile(paths[paths.length - 1], 'utf-8', inner);
-      } else {
-        callback(result);
-      }
-    }
-    fs.readFile(paths[paths.length - 1], 'utf-8', inner);
-  });
-}
-
-function renderStory(story, callback) {
-  var fullpath = path.join(__dirname, path.basename(story));
-  fs.readFile(fullpath, 'utf-8', function(err, data) {
-    var obj = JSON.parse(obj);
-    obj.file = path.basename(fullpath);
-    var story = new Story(obj);
-    var fragmentPaths = story.fragments.map(function(fragment) {
-      return path.join("news", fragment);
-    });
-    var HTMLFragments = [];
-    function inner(err, data) {
-      HTMLFragments.push(data);
-      if (fragmentPaths.length > 0) {
-        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
-      } else {
-        app.render("story.html")
-      }
-    }
-    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
-  });
-}
-
 app.set('views', './news');
 
 app.engine('html', ejs.renderFile);
@@ -110,7 +62,6 @@ app.get('^/login/?$', function(req, res) {
   app.render("login.html", function(err, html) {
     res.send(html);
   });
-  // renderGeneric(res, 'login.html');
 });
 
 app.all('^/logout/?$', function(req, res) {
@@ -208,8 +159,10 @@ app.listen(3030, initMimeTypes);
 
 
 function clientError(res, code, msg) {
-    res.writeHead(code);
-    res.end("<html><head><title>CLIENT ERROR</title></head><body>HTTP "+ code + "<br/>" + msg + "</body></html>");
+    res.status(code);
+    app.render("clientError.html", {code: code, msg: msg}, function(err, html) {
+      res.send(html);
+    });
 }
 
 function editStory(res, requrl, templateName){
@@ -223,26 +176,65 @@ function editStory(res, requrl, templateName){
   //read existing data
   fs.readFile(fileToBeEdited, function(err, contents) {
     var fileContent = JSON.parse(contents);
-    //get radio button value
-    var isPublic=fileContent.Public;
-    //read edit file page
-    fs.readFile(templateRoot+templateName,function(err,data){
-        renderedTemplate = data.toString();
-
-        //load existing data
-        renderedTemplate = renderedTemplate.replace("{{title}}",fileContent.Title);
-        renderedTemplate = renderedTemplate.replace("{{author}}",fileContent.Author);
-        if(isPublic) {
-            renderedTemplate = renderedTemplate.replace("{{yesCheck}}","checked");
-            renderedTemplate = renderedTemplate.replace("{{noCheck}}","");
-        } else {
-            renderedTemplate = renderedTemplate.replace("{{yesCheck}}","");
-            renderedTemplate = renderedTemplate.replace("{{noCheck}}","checked");
-        }
-        renderedTemplate = renderedTemplate.replace("{{fragments}}",fileContent.Fragments);
-        renderedTemplate = renderedTemplate.replace("{{filename}}",filenameToBeEdited);
-        res.end(renderedTemplate);
+    app.render(templateName, {
+      title: fileContent.Title,
+      author: fileContent.Author,
+      isPublic: fileContent.Public,
+      fragments: fileContent.Fragments,
+      filename: filenameToBeEdited
+    }, function(err, html) {
+      res.send(html);
     });
+  });
+}
+
+function getStories(callback) {
+  var result = [];
+  var ROOT = __dirname;
+
+  fs.readdir(ROOT, function(err, files) {
+    var stories = files.filter(function(f) {
+      return f.endsWith(".story");
+    });
+    var paths = stories.map(function(f) {
+      return ROOT + path.sep + f;
+    });
+    function inner(error, data) {
+      var fileName = path.basename(paths.pop());
+      var obj = JSON.parse(data);
+      obj.file = fileName;
+      result.push(new Story(obj));
+      if (paths.length > 0) {
+          fs.readFile(paths[paths.length - 1], 'utf-8', inner);
+      } else {
+        callback(result);
+      }
+    }
+    fs.readFile(paths[paths.length - 1], 'utf-8', inner);
+  });
+}
+
+function renderStory(story, callback) {
+  var fullpath = path.join(__dirname, path.basename(story));
+  fs.readFile(fullpath, 'utf-8', function(err, data) {
+    var obj = JSON.parse(obj);
+    obj.file = path.basename(fullpath);
+    var story = new Story(obj);
+    var fragmentPaths = story.fragments.map(function(fragment) {
+      return path.join("news", fragment);
+    });
+    var HTMLFragments = [];
+    function inner(err, data) {
+      HTMLFragments.push(data);
+      if (fragmentPaths.length > 0) {
+        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+      } else {
+        app.render("story.html", {fragments: HTMLFragments}, function(err, html) {
+          res.send(html);
+        });
+      }
+    }
+    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
   });
 }
 
@@ -292,7 +284,6 @@ function createStory(req,res,userDict,edit) {
   req.on('end', function () {
     var postData = qstring.parse(jsonData);
     var filename=postData.filename + ".story";
-    console.log(filename);
     var aa = postData.Fragments.split(",");
     var array=[];
     for(var b in aa){
@@ -340,26 +331,20 @@ function login(req,res) {
   });
   req.on('end', function () {
     var postData = qstring.parse(bodyData);
-    var role=postData['role'];
-    var username = postData['username'];
-    if (username == postData['password']) {
-        res.writeHead(302,{
-            'Location': '/landing.html',
-            'Set-Cookie': ["username="+username+"; path=/;", "role="+role+"; path=/;"]
-        });
-        res.end();
+    var role = postData.role;
+    var username = postData.username;
+    if (username === postData.password) {
+      res.cookie("username", username);
+      res.cookie("role", role);
+      res.redirect("/");
     } else {
-        res.writeHead(302,{'Location': '/login/'});
-        res.end();
+      res.redirect("/login/");
     }
   });
 }
 
 function logout(res) {
-   res.writeHead(302,{
-    'Location': '/landing.html',
-    'Set-Cookie': ["username=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;",
-                   "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"]
-   });
-   res.end();
+  res.cookie("username", "", {maxAge: 0});
+  res.cookie("role", "", {maxAge: 0});
+  res.redirect("/");
 }
