@@ -60,7 +60,13 @@ app.get('^/landing.html$', function(req, res) {
 });
 
 app.post('^/login/?$', function(req, res) {
-  login(req, res);
+  if (req.body.username === req.body.password) {
+    res.cookie("username", req.body.username);
+    res.cookie("role", req.body.role);
+    res.redirect("/");
+  } else {
+    res.redirect("/login/");
+  }
 });
 
 app.get('^/login/?$', function(req, res) {
@@ -70,7 +76,9 @@ app.get('^/login/?$', function(req, res) {
 });
 
 app.all('^/logout/?$', function(req, res) {
-  logout(res);
+  res.cookie("username", "", {maxAge: 0});
+  res.cookie("role", "", {maxAge: 0});
+  res.redirect("/");
 });
 
 app.all('^*.story$', function(req, res) {
@@ -103,11 +111,6 @@ app.all('^*.story$', function(req, res) {
     }
     fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
   });
-});
-
-app.all('^/media/*$', function(req, res) {
-
-  renderMedia(res, req.path);
 });
 
 app.all('^/addStoryPage/?$', function(req, res) { // endpoint for adding
@@ -313,21 +316,5 @@ function createHTML(userDict,req,res) {
       console.error(err);
     }
   });
-  res.redirect("/");
-}
-
-function login(req,res) {
-  if (req.body.username === req.body.password) {
-    res.cookie("username", req.body.username);
-    res.cookie("role", req.body.role);
-    res.redirect("/");
-  } else {
-    res.redirect("/login/");
-  }
-}
-
-function logout(res) {
-  res.cookie("username", "", {maxAge: 0});
-  res.cookie("role", "", {maxAge: 0});
   res.redirect("/");
 }
