@@ -36,7 +36,8 @@ app.use(function(req, res, next) {
 app.use(session({
   secret: 'IVTK4OO8zLMgzia',
   resave: true,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: {maxAge: 1200000} // 20 minutes
 }));
 app.use('/media', express.static('media'));
 app.use('/news', express.static('news'));
