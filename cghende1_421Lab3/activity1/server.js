@@ -37,6 +37,8 @@ app.use(function(req, res, next) {
 
 app.use('/media', express.static('media'));
 
+app.use('/news', express.static('news'));
+
 app.all('/', function(req, res) {
   res.writeHead(302, {Location: '/landing.html'});
   res.end();

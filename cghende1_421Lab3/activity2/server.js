@@ -44,6 +44,8 @@ app.use(session({
 
 app.use('/media', express.static('media'));
 
+app.use('/news', express.static('news'));
+
 app.all('/', function(req, res) {
   res.redirect("/landing.html");
 });
