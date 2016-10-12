@@ -282,49 +282,36 @@ function initMimeTypes() {
 }
 
 function createStory(req,res,userDict,edit) {
-  var jsonData = "";
-  req.on('data', function (chunk) {
-    jsonData += chunk.toString();
+  var filename=req.body.filename + ".story";
+  var aa = req.body.Fragments.split(",");
+  var array = aa.map(function(item){
+    return item.trim();
   });
-  req.on('end', function () {
-    var postData = qstring.parse(jsonData);
-    var filename=postData.filename + ".story";
-    var aa = postData.Fragments.split(",");
-    var array=[];
-    for(var b in aa){
-      array.push(aa[b].trim());
-    }
-    var fileContent ={Title: postData.Title,
-                      Author: postData.Author,
-                      Public: postData.Public,
-                      Fragments: array
-                    };
-    fileContent = JSON.stringify(fileContent);
-    //write filecontent to the .story file
-    fs.writeFile(filename, fileContent, function(err) {
-         console.error(err);
-   });
+  var fileContent ={Title: req.body.Title,
+                    Author: req.body.Author,
+                    Public: req.body.Public,
+                    Fragments: array
+                  };
+  fileContent = JSON.stringify(fileContent);
+  //write filecontent to the .story file
+  fs.writeFile(filename, fileContent, function(err) {
+       console.error(err);
   });
   if(edit){
     res.redirect("/");
    } else {
     res.redirect("/addStoryPage");
-    // renderGeneric(res, 'addStoryPage.html');
   }
 }
 
 function createHTML(userDict,req,res) {
-  var jsonData = "";
-  req.on('data', function (chunk) {
-    jsonData += chunk.toString();
-  });
-  req.on('end', function () {
-    var postData = qstring.parse(jsonData);
-    var filename = templateRoot + postData.filename + ".html";
-    var fileContent = postData.text;
-    fs.writeFile(filename, fileContent, function(err) {
-         console.error(err);
-   });
+  var postData = req.body;
+  var filename = templateRoot + postData.filename + ".html";
+  var fileContent = postData.text;
+  fs.writeFile(filename, fileContent, function(err) {
+    if (err) {
+      console.error(err);
+    }
   });
   res.redirect("/");
 }
