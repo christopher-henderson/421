@@ -7,6 +7,7 @@ var mimeTypes = {};
 var path = require('path');
 var express = require('express');
 var app = express();
+var bodyparser = require("body-parser");
 var cookieparser = require('cookie-parser')();
 var ejs = require('ejs');
 
@@ -23,6 +24,8 @@ app.set('views', './news');
 app.engine('html', ejs.renderFile);
 
 app.use(cookieparser);
+
+app.use(bodyparser.urlencoded({extended: true}));
 
 app.use(function(req, res, next) {
   // Step 1: Process headers. In this case, find the cookie
@@ -327,22 +330,13 @@ function createHTML(userDict,req,res) {
 }
 
 function login(req,res) {
-  var bodyData = "";
-  req.on('data', function (chunk) {
-    bodyData += chunk.toString();
-  });
-  req.on('end', function () {
-    var postData = qstring.parse(bodyData);
-    var role = postData.role;
-    var username = postData.username;
-    if (username === postData.password) {
-      res.cookie("username", username);
-      res.cookie("role", role);
-      res.redirect("/");
-    } else {
-      res.redirect("/login/");
-    }
-  });
+  if (req.body.username === req.body.password) {
+    res.cookie("username", req.body.username);
+    res.cookie("role", req.body.role);
+    res.redirect("/");
+  } else {
+    res.redirect("/login/");
+  }
 }
 
 function logout(res) {
