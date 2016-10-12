@@ -12,8 +12,8 @@
     <h1>Buy <%= story.Title %></h1>
 
     <form action="/payment/">
-      Email: <input type="email" name="email" value="<%= session.email %>"><br>
-      Address: <input type="text" name="address" value="<%= session.address %>"><br>
+      Email: <input type="email" name="email" value="<%= email %>"><br>
+      Address: <input type="text" name="address" value="<%= address %>"><br>
       <input type="submit" name="action" value="Submit">
       <input type="submit" name="action" value="Save"><br>
       <input type="hidden" name="story" value='<%- JSON.stringify(story) %>'>

@@ -9,12 +9,12 @@
       <a href="/logout/">logout</a>
     <% } %>
 
-    <h1>Confirm order of <%= session.story.Title %></h1>
+    <h1>Confirm order of <%= Title %></h1>
 
-    Email: <%= session.email %><br>
-    Address: <%= session.address %><br>
-    Billing Address: <%= session.billingAddress %><br>
-    CreditCard: <%= session.creditCard %><br>
+    Email: <%= email %><br>
+    Address: <%= address %><br>
+    Billing Address: <%= billingAddress %><br>
+    CreditCard: <%= creditCard %><br>
 
     <form action="/confirmed/">
       <input type="submit" name="action" value="Submit">

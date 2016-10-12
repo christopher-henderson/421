@@ -1,8 +1,6 @@
 var fs = require('fs');
 var url = require('url');
-var qstring = require('querystring');
 var templateRoot = 'news/';
-var mimeTypes = {};
 
 var path = require('path');
 var express = require('express');
@@ -11,22 +9,11 @@ var bodyparser = require("body-parser");
 var cookieparser = require('cookie-parser')();
 var ejs = require('ejs');
 
-function Story(options) {
-  this.title = options.Title;
-  this.author = options.Author;
-  this.public = (options.Public === "no") ? false : true;
-  this.fragments = options.Fragments;
-  this.file = options.file;
-}
-
 app.set('views', './news');
-
 app.engine('html', ejs.renderFile);
 
 app.use(cookieparser);
-
 app.use(bodyparser.urlencoded({extended: true}));
-
 app.use(function(req, res, next) {
   // Step 1: Process headers. In this case, find the cookie
   var usernameDict = { username: "Jane Doe", role: "Guest" };
@@ -37,9 +24,7 @@ app.use(function(req, res, next) {
   req.usernameDict = usernameDict;
   next();
 });
-
 app.use('/media', express.static('media'));
-
 app.use('/news', express.static('news'));
 
 app.all('/', function(req, res) {
@@ -163,8 +148,7 @@ app.all('^/delete*$', function(req, res) {
   }
 });
 
-app.listen(3030, initMimeTypes);
-
+app.listen(3030);
 
 function clientError(res, code, msg) {
     res.status(code);
@@ -257,33 +241,6 @@ function deleteFile(userDict,requrl,res){
        });
 }
 
-function initMimeTypes() {
-    var strs = [];
-
-    // from Node documentation on readline
-    // https://nodejs.org/api/readline.html
-    const readline = require('readline');
-
-    const rl = readline.createInterface({
-        input: fs.createReadStream('mime.types')
-    });
-
-    rl.on('line', (line) => {
-        line = line.trim();
-        if (!line.startsWith("#")) {
-            // not commented out. Split on whitespace
-            // thanks http://stackoverflow.com/questions/14912502
-            strs = line.match(/\S+/g) || [];
-            // if it is 1 no extensions are present
-            // if > 1 then 1 or more extensions present
-            // add a mime type entry for each one
-            for (i = 1; i < strs.length; i++) {
-                mimeTypes[strs[i]] = strs[0];
-            }
-        }
-    });
-}
-
 function createStory(req,res,userDict,edit) {
   var filename=req.body.filename + ".story";
   var aa = req.body.Fragments.split(",");
@@ -317,4 +274,12 @@ function createHTML(userDict,req,res) {
     }
   });
   res.redirect("/");
+}
+
+function Story(options) {
+  this.title = options.Title;
+  this.author = options.Author;
+  this.public = (options.Public === "no") ? false : true;
+  this.fragments = options.Fragments;
+  this.file = options.file;
 }
