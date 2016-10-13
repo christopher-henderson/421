@@ -151,8 +151,9 @@ app.get("^/confirmed/?$", function(req, res) {
   if (req.query.action === "Save") {
     res.redirect("/");
   } else {
+    delete req.session.stage;
     var story = req.session.story;
-    req.session.destroy();
+    req.session.bought = story.File;
     res.redirect("/" + story.File);
   }
 });
@@ -164,33 +165,29 @@ app.get("^/cancel/?$", function(req, res){
 
 app.all('^*.story$', function(req, res) {
   var fullpath = path.join(__dirname, path.basename(req.path));
-  fs.readFile(fullpath, 'utf-8', function(err, data) {
-    var obj = JSON.parse(data);
-    obj.File = path.basename(fullpath);
-    var story = new Story(obj);
-    var fragmentPaths = story.Fragments.map(function(fragment) {
-      return path.join("news", fragment);
-    });
-    var HTMLFragments = [];
-    function inner(err, data) {
-      HTMLFragments.push(data);
-      if (fragmentPaths.length > 0) {
-        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
-      } else {
-        app.render("story.html",
-          {
-            username: req.usernameDict.username,
-            role: req.usernameDict.role,
-            story: story,
-            fragments: HTMLFragments
-          },
-          function(err, html) {
-            res.send(html);
-          }
-        );
+  getStoryAndFragments(fullpath, function(story, HTMLFragments) {
+    if (!(
+        story.Public || req.usernameDict.role === "Subscriber" ||
+        req.usernameDict.username === story.Author ||
+        req.session.bought === path.basename(req.path))) {
+          res.sendStatus(403);
       }
+    else {
+      app.render("story.html",
+        {
+          username: req.usernameDict.username,
+          role: req.usernameDict.role,
+          story: story,
+          fragments: HTMLFragments
+        },
+        function(err, html) {
+          if (req.session.bought === path.basename(req.path)) {
+            req.session.destroy();
+          }
+          res.send(html);
+        }
+      );
     }
-    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
   });
 });
 
@@ -284,6 +281,24 @@ function getStory(story, callback) {
   });
 }
 
+function getStoryAndFragments(fullpath, callback) {
+  getStory(fullpath, function (story) {
+    var fragmentPaths = story.Fragments.map(function(fragment) {
+      return path.join("news", fragment);
+    });
+    var HTMLFragments = [];
+    function inner(err, data) {
+      HTMLFragments.push(data);
+      if (fragmentPaths.length > 0) {
+        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+      } else {
+        callback(story, HTMLFragments);
+      }
+    }
+    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
+  });
+}
+
 function getStories(callback) {
   var result = [];
   var ROOT = __dirname;
@@ -307,30 +322,6 @@ function getStories(callback) {
       }
     }
     fs.readFile(paths[paths.length - 1], 'utf-8', inner);
-  });
-}
-
-function renderStory(story, callback) {
-  var fullpath = path.join(__dirname, path.basename(story));
-  fs.readFile(fullpath, 'utf-8', function(err, data) {
-    var obj = JSON.parse(obj);
-    obj.File = path.basename(fullpath);
-    var story = new Story(obj);
-    var fragmentPaths = story.Fragments.map(function(fragment) {
-      return path.join("news", fragment);
-    });
-    var HTMLFragments = [];
-    function inner(err, data) {
-      HTMLFragments.push(data);
-      if (fragmentPaths.length > 0) {
-        fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
-      } else {
-        app.render("story.html", {fragments: HTMLFragments}, function(err, html) {
-          res.send(html);
-        });
-      }
-    }
-    fs.readFile(fragmentPaths.shift(), 'utf-8', inner);
   });
 }
 
