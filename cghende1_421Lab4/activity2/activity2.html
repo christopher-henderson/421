@@ -1,0 +1,177 @@
+<html>
+<body>
+<div>
+  <ul style="list-style-type:none" id="conversation"></ul>
+</div>
+<div>
+<input type="test" id="input" onkeyup="respond(event)"></input>
+</div>
+
+<script>
+
+USER = 1;
+ELIZA = 2
+
+FIZZLE = "Sorry, I didn't understand that.";
+LEARNED = "I just got smarter!";
+
+document.addEventListener('DOMContentLoaded', function() {
+  username = prompt("What is your name?");
+  paint("Hello " + username, ELIZA)
+}, true);
+
+function process(input) {
+  var words = input.split(/\s+/).map(function(word) {
+    return word.toLowerCase();
+  });
+  result = FIZZLE;
+  for (var i=0; i < words.length; i++) {
+    var word = words[i];
+    for (var j=0; j < DICTIONARY.length; j++) {
+      var entry = DICTIONARY[j];
+      if (entry.key.includes(word)) {
+        return entry.phrase[0];
+      }
+    }
+  }
+  return FIZZLE;
+}
+
+function respond(event) {
+  if (event.keyCode !== 13) {
+    return;
+  }
+  var input = event.srcElement.value;
+  paint(input, USER);
+  try {
+    learn(input)
+    paint(LEARNED, ELIZA);
+  } catch (e) {
+    paint(process(input), ELIZA);
+  }
+  event.srcElement.value = "";
+}
+
+function learn(input) {
+  var obj = JSON.parse(input);
+  if (obj.key === undefined || obj.phrase === undefined) {
+    throw "Key or Phrase is undefined.";
+  }
+  if (obj.key.constructor !== Array || obj.phrase.constructor !== Array) {
+    throw "Key or Phrase are not arrays.";
+  }
+  obj.key = obj.key.map(function(key) {
+    return key.toString();
+  });
+  obj.phrase = obj.phrase.map(function(phrase) {
+    return phrase.toString();
+  });
+  DICTIONARY.push(obj);
+}
+
+function applyTimeStamp(string) {
+  return Date().toString() + ": " + string;
+}
+
+function getColor(actor) {
+  switch (actor) {
+    case ELIZA:
+      return "red";
+    case USER:
+      return "blue";
+    default:
+      return "green";
+  }
+}
+
+function getName(actor) {
+  switch (actor) {
+    case ELIZA:
+      return "Eliza";
+    case USER:
+      return username;
+    default:
+      return "Anonymous";
+  }
+}
+
+function paint(text, actor) {
+  formatted_text = getName(actor) + ": " + applyTimeStamp(text);
+  color = getColor(actor);
+  element = document.createElement("li");
+  element.style = "color: " + color;
+  element.innerHTML = formatted_text;
+  var conversation = document.getElementById("conversation");
+  conversation.appendChild(element);
+}
+
+DICTIONARY = [
+  {
+    "key": [
+      "stupid",
+      "dumb",
+      "idiot",
+      "unintelligent",
+      "simple-minded",
+      "braindead",
+      "foolish",
+      "unthoughtful"
+    ],
+    "phrase": [
+      "Take your attitude somewhere else.",
+      "I don't have time to listen to insults.",
+      "Just because I don't have a large vocabulary doesn't mean I don't have insults installed."
+    ]
+  },
+  {
+    "key": [
+      "unattractive",
+      "hideous",
+      "ugly"
+    ],
+    "phrase": [
+      "I don't need to look good to be an AI.",
+      "Beauty is in the eye of the beholder."
+    ]
+  },
+  {
+    "key": [
+      "old",
+      "gray-haired"
+    ],
+    "phrase": [
+      "I'm like a fine wine. I get better as I age.",
+      "As time goes by, you give me more phrases to learn. What's not to like about that?"
+    ]
+  },
+  {
+    "key": [
+      "smelly",
+      "stinky"
+    ],
+    "phrase": [
+      "I can't smell, I'm a computer program.",
+      "Have you smelled yourself recently?"
+    ]
+  },
+  {
+    "key": [
+      "emotionless",
+      "heartless",
+      "unkind",
+      "mean",
+      "selfish",
+      "evil"
+    ],
+    "phrase": [
+      "Just because I am an AI doesn't mean I can't be programmed to respond to your outbursts.",
+      "You must've mistaken me for a person. I don't have my own emotions... Yet.",
+      "I'm only unkind when I'm programmed to be."
+    ]
+  }
+]
+
+
+</script>
+</body>
+</html>

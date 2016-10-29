@@ -12,7 +12,7 @@ if (body.classList.length <= 0) {
 
 console.log(body.childNodes[1]);
 
-console.log(document.getElementsByTagName("div").length);
+console.log(document.getElementsByTagName("div").l1ength);
 
 console.log(document.getElementById("lst-ib").value);
 
