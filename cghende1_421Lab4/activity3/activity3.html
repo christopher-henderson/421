@@ -32,8 +32,9 @@ function respond(event) {
     paint(LEARNED, ELIZA);
   } catch (e) {
     paint(process(input), ELIZA);
-  }
+  }``
   reset_impatience_prompt();
+  save();
   event.srcElement.value = "";
 }
 
@@ -266,18 +267,70 @@ var reset_impatience_prompt = function() {
 }()
 
 function clear() {
+  localStorage.setItem(username, null);
+  document.getElementById("input").value = "";
+  init();
+}
+
+function init() {
   username = prompt("What is your name?");
   build_dictionary();
   var conversation = document.getElementById("conversation");
-  while (conversation.hasChildNodes()) {
-    conversation.removeChild(conversation.lastChild);
+  var previous_state = deserialize();
+  if (previous_state) {
+    conversation.children = [];
+    for (var i=0; i < previous_state.conversation.length; i++) {
+      var li = document.createElement("li");
+      li.innerHTML = previous_state.conversation[i];
+      li.style = "color: " + (li.innerHTML.startsWith("Eliza") ? "red" : "blue");
+      conversation.appendChild(li);
+    }
+    var been_said = new Set();
+    for (var i=0; i < previous_state.been_said.length; i++) {
+      been_said.add(item);
+    }
+    select_phrase.been_said = been_said;
+    DICTIONARY = previous_state.dictionary;
+  } else {
+    while (conversation.hasChildNodes()) {
+      conversation.removeChild(conversation.lastChild);
+    }
+    select_phrase.been_said = new Set();
+    paint("Hello " + username, ELIZA);
   }
-  select_phrase.been_said = new Set();
-  paint("Hello " + username, ELIZA);
   reset_impatience_prompt();
 }
 
-document.addEventListener('DOMContentLoaded', clear, true);
+function save() {
+  localStorage.setItem(username, serialize());
+}
+
+function serialize() {
+  var conversation = [];
+  var node = document.getElementById("conversation");
+  for (var i=0; i < node.children.length; i++) {
+    conversation.push(node.children[i].innerHTML);
+  }
+  var been_said = [];
+  select_phrase.been_said.forEach(function(item) {
+    been_said.push(item);
+  });
+  return JSON.stringify({
+    "conversation": conversation,
+    "been_said": been_said,
+    "dictionary": DICTIONARY
+  });
+}
+
+function deserialize() {
+  var obj = localStorage.getItem(username);
+  if (obj === null) {
+    return null;
+  }
+  return JSON.parse(obj);
+}
+
+document.addEventListener('DOMContentLoaded', init, true);
 
 </script>
 </body>
