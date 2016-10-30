@@ -12,30 +12,10 @@
 USER = 1;
 ELIZA = 2
 
+LOW_SCORE_THRESHOLD = 0.1
+
 FIZZLE = "Sorry, I didn't understand that.";
 LEARNED = "I just got smarter!";
-
-document.addEventListener('DOMContentLoaded', function() {
-  username = prompt("What is your name?");
-  paint("Hello " + username, ELIZA)
-}, true);
-
-function process(input) {
-  var words = input.split(/\s+/).map(function(word) {
-    return word.toLowerCase();
-  });
-  result = FIZZLE;
-  for (var i=0; i < words.length; i++) {
-    var word = words[i];
-    for (var j=0; j < DICTIONARY.length; j++) {
-      var entry = DICTIONARY[j];
-      if (entry.key.includes(word)) {
-        return entry.phrase[0];
-      }
-    }
-  }
-  return FIZZLE;
-}
 
 function respond(event) {
   if (event.keyCode !== 13) {
@@ -43,13 +23,87 @@ function respond(event) {
   }
   var input = event.srcElement.value;
   paint(input, USER);
+  if (input === "clear") {
+    clear();
+    return;
+  }
   try {
     learn(input)
     paint(LEARNED, ELIZA);
   } catch (e) {
     paint(process(input), ELIZA);
   }
+  reset_impatience_prompt();
   event.srcElement.value = "";
+}
+
+function tokenize(input) {
+  tokens = [];
+  for (var i=0; i < input.length; i++) {
+    for (var j=i+2; j < input.length + 1; j++) {
+      tokens.push(input.slice(i, j));
+    }
+  }
+  return tokens;
+}
+
+function score(input, key, absolute_size) {
+  var pointer = 0;
+  var larger = input.length > key.length ? input : key;
+  var smaller = input.length <= key.length ? input : key;
+  var total = 0;
+  for (var i=0; i < smaller.length; i++) {
+    total += larger[i] === smaller[i] ? 1 : 0;
+  }
+  return total / absolute_size;
+}
+
+function select_winner(tokens, input_length) {
+  var high_score = LOW_SCORE_THRESHOLD;
+  var winner = -1;
+  for (var i=0; i < DICTIONARY.length; i++) {
+    var keys = DICTIONARY[i].key;
+    for (var key=0; key < keys.length; key++) {
+      for (var token=0; token < tokens.length; token++) {
+        var value = score(tokens[token], keys[key], input_length);
+        if (value > high_score) {
+          high_score = value;
+          winner = i;
+        }
+      }
+    }
+  }
+  return winner;
+}
+
+var select_phrase = function() {
+  var been_said = new Set();
+  return function(winner) {
+    if (winner < 0) {
+      return FIZZLE;
+    }
+    var phrases = DICTIONARY[winner].phrase;
+    shuffle(phrases);
+    for (var i=0; i < phrases.length; i++) {
+      var phrase = phrases[i];
+      if (been_said.has(phrase)) {
+        continue;
+      }
+      been_said.add(phrase);
+      return phrase;
+    }
+    for (var i=0; i < phrases.length; i++) {
+      been_said.delete(phrases[i]);
+    }
+    return select_phrase(winner);
+  }
+}()
+
+function process(input) {
+  var tokens = tokenize(input.toLowerCase());
+  var winner = select_winner(tokens, input.length);
+  var phrase = select_phrase(winner);
+  return phrase;
 }
 
 function learn(input) {
@@ -60,11 +114,15 @@ function learn(input) {
   if (obj.key.constructor !== Array || obj.phrase.constructor !== Array) {
     throw "Key or Phrase are not arrays.";
   }
+  if (obj.key.length === 0 || obj.phrase.length === 0) {
+    alert("Eliza cannot learn from empty key sets or phrases!");
+    throw "Empty keys or phrases";
+  }
   obj.key = obj.key.map(function(key) {
-    return key.toString();
+    return key.toString().toLowerCase();
   });
   obj.phrase = obj.phrase.map(function(phrase) {
-    return phrase.toString();
+    return phrase.toString().toLowerCase();
   });
   DICTIONARY.push(obj);
 }
@@ -105,72 +163,126 @@ function paint(text, actor) {
   conversation.appendChild(element);
 }
 
-DICTIONARY = [
-  {
-    "key": [
-      "stupid",
-      "dumb",
-      "idiot",
-      "unintelligent",
-      "simple-minded",
-      "braindead",
-      "foolish",
-      "unthoughtful"
-    ],
-    "phrase": [
-      "Take your attitude somewhere else.",
-      "I don't have time to listen to insults.",
-      "Just because I don't have a large vocabulary doesn't mean I don't have insults installed."
-    ]
-  },
-  {
-    "key": [
-      "unattractive",
-      "hideous",
-      "ugly"
-    ],
-    "phrase": [
-      "I don't need to look good to be an AI.",
-      "Beauty is in the eye of the beholder."
-    ]
-  },
-  {
-    "key": [
-      "old",
-      "gray-haired"
-    ],
-    "phrase": [
-      "I'm like a fine wine. I get better as I age.",
-      "As time goes by, you give me more phrases to learn. What's not to like about that?"
-    ]
-  },
-  {
-    "key": [
-      "smelly",
-      "stinky"
-    ],
-    "phrase": [
-      "I can't smell, I'm a computer program.",
-      "Have you smelled yourself recently?"
-    ]
-  },
-  {
-    "key": [
-      "emotionless",
-      "heartless",
-      "unkind",
-      "mean",
-      "selfish",
-      "evil"
-    ],
-    "phrase": [
-      "Just because I am an AI doesn't mean I can't be programmed to respond to your outbursts.",
-      "You must've mistaken me for a person. I don't have my own emotions... Yet.",
-      "I'm only unkind when I'm programmed to be."
-    ]
-  }
-]
+function build_dictionary() {
+    DICTIONARY = [
+    {
+      "key": [
+        "bored",
+        "waiting",
+        "taking forever"
+      ],
+      "phrase": [
+        username + ", I'm waiting here!",
+        "Whatsa matter, " + username + ". Cat got your tongue?"
+      ]
+    },
+    {
+      "key": [
+        "stupid",
+        "dumb",
+        "idiot",
+        "unintelligent",
+        "simple-minded",
+        "braindead",
+        "foolish",
+        "unthoughtful"
+      ],
+      "phrase": [
+        "Take your attitude somewhere else.",
+        "I don't have time to listen to insults.",
+        "Just because I don't have a large vocabulary doesn't mean I don't have insults installed."
+      ]
+    },
+    {
+      "key": [
+        "unattractive",
+        "hideous",
+        "ugly"
+      ],
+      "phrase": [
+        "I don't need to look good to be an AI.",
+        "Beauty is in the eye of the beholder."
+      ]
+    },
+    {
+      "key": [
+        "old",
+        "gray-haired"
+      ],
+      "phrase": [
+        "I'm like a fine wine. I get better as I age.",
+        "As time goes by, you give me more phrases to learn. What's not to like about that?"
+      ]
+    },
+    {
+      "key": [
+        "smelly",
+        "stinky"
+      ],
+      "phrase": [
+        "I can't smell, I'm a computer program.",
+        "Have you smelled yourself recently?"
+      ]
+    },
+    {
+      "key": [
+        "emotionless",
+        "heartless",
+        "unkind",
+        "mean",
+        "selfish",
+        "evil"
+      ],
+      "phrase": [
+        "Just because I am an AI doesn't mean I can't be programmed to respond to your outbursts.",
+        "You must've mistaken me for a person. I don't have my own emotions... Yet.",
+        "I'm only unkind when I'm programmed to be."
+      ]
+    }
+  ]
+}
 
+function shuffle(array) {
+  for (var shuffles=0; shuffles < array.length * 10; shuffles++) {
+    var i = Math.floor(Math.random() * array.length);
+    var j = Math.floor(Math.random() * array.length);
+    var tmp = array[i];
+    array[i] = array[j];
+    array[j] = tmp;
+  }
+}
+
+var reset_impatience_prompt = function() {
+  var currentID;
+  return function() {
+    if (currentID !== undefined) {
+        window.clearTimeout(currentID);
+    }
+    currentID = window.setTimeout(function() {
+      paint(select_phrase(0), ELIZA),
+      reset_impatience_prompt();
+    }, 20 * 1000);
+  }
+}()
+
+function clear() {
+  username = prompt("What is your name?");
+  build_dictionary();
+  var conversation = document.getElementById("conversation");
+  while (conversation.hasChildNodes()) {
+    conversation.removeChild(conversation.lastChild);
+  }
+  select_phrase.been_said = new Set();
+  paint("Hello " + username, ELIZA);
+  reset_impatience_prompt();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  username = prompt("What is your name?");
+  build_dictionary();
+  paint("Hello " + username, ELIZA);
+  reset_impatience_prompt();
+}, true);
 
 </script>
 </body>
