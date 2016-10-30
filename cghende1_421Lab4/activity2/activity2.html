@@ -12,13 +12,29 @@
 USER = 1;
 ELIZA = 2
 
-LOW_SCORE_THRESHOLD = 0.1
+LOW_SCORE_THRESHOLD = 0.3
 
 FIZZLE = "Sorry, I didn't understand that.";
 LEARNED = "I just got smarter!";
 
 STACK = [];
 FORWARD_STACK = [];
+
+function respond(event) {
+  switch (event.keyCode) {
+    case 38:
+      back();
+      break;
+    case 40:
+      forward();
+      break;
+    case 13:
+      play_the_game(event);
+      break;
+    default:
+      return;
+  }
+}
 
 function back() {
   if (STACK.length <= 0) {
@@ -40,14 +56,7 @@ function forward() {
   input.value = previous;
 }
 
-function respond(event) {
-  if (event.keyCode === 38) {
-    return back();
-  } else if (event.keyCode === 40) {
-    return forward();
-  } else if (event.keyCode !== 13) {
-    return;
-  }
+function play_the_game(event) {
   var input = event.srcElement.value;
   paint(input, USER);
   if (input === "clear") {
