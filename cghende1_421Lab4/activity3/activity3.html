@@ -95,7 +95,7 @@ function tokenize(input) {
   return tokens;
 }
 
-function score(input, key) {
+function similarity(input, key) {
   var total = 0
   for (var i=0; i < input.length; i ++) {
     total += input[i] === key[i] ? 1 : 0;
@@ -112,7 +112,7 @@ function select_winner(tokens, input_length) {
     var key_score = 0;
     for (var key=0; key < keys.length; key++) {
       for (var token=0; token < tokens.length; token++) {
-        var token_score = score(tokens[token], keys[key], input_length)
+        var token_score = similarity(tokens[token], keys[key], input_length)
         token_score *= Math.pow(tokens[token].length / input_length, tokens.length)
         key_score += token_score;
       }
