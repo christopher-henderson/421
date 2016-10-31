@@ -70,10 +70,18 @@ function play_the_game(event) {
     if (input !== "") {
       BACK_STACK.push(input);
     }
-    paint(process(input), ELIZA);
+    var response = process(input);
+    paint(response, ELIZA);
   }
   reset_impatience_prompt();
   event.srcElement.value = "";
+}
+
+function process(input) {
+  var tokens = tokenize(input.toLowerCase());
+  var winner = select_winner(tokens, input.length);
+  var phrase = select_phrase(winner);
+  return phrase;
 }
 
 function tokenize(input) {
@@ -86,7 +94,7 @@ function tokenize(input) {
   return tokens;
 }
 
-function score(input, key, absolute_size) {
+function similarity(input, key, absolute_size) {
   var larger = input.length > key.length ? input : key;
   var smaller = input.length <= key.length ? input : key;
   var total = 0;
@@ -104,11 +112,13 @@ function select_winner(tokens, input_length) {
     var key_score = 0;
     for (var key=0; key < keys.length; key++) {
       for (var token=0; token < tokens.length; token++) {
-        var token_score = score(tokens[token], keys[key], input_length)
-        token_score *= Math.pow(tokens[token].length / input_length, tokens.length)
+        var token_score = similarity(tokens[token], keys[key])
+        token_score *= token_score === 1 ? 10 : 1
+        token_score *= tokens[token].length / input_length
         key_score += token_score;
       }
     }
+    console.log(key_score + ": " + keys)
     if (key_score >= high_score) {
       high_score = key_score;
       winner = i;
@@ -139,13 +149,6 @@ var select_phrase = function() {
     return select_phrase(winner);
   }
 }()
-
-function process(input) {
-  var tokens = tokenize(input.toLowerCase());
-  var winner = select_winner(tokens, input.length);
-  var phrase = select_phrase(winner);
-  return phrase;
-}
 
 function learn(input) {
   var obj = JSON.parse(input);

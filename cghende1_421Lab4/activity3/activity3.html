@@ -70,11 +70,19 @@ function play_the_game(event) {
     if (input !== "") {
       BACK_STACK.push(input);
     }
-    paint(process(input), ELIZA);
+    var resposne = process(input);
+    paint(response, ELIZA);
   }
   reset_impatience_prompt();
   save();
   event.srcElement.value = "";
+}
+
+function process(input) {
+  var tokens = tokenize(input.toLowerCase());
+  var winner = select_winner(tokens, input.length);
+  var phrase = select_phrase(winner);
+  return phrase;
 }
 
 function tokenize(input) {
@@ -139,13 +147,6 @@ var select_phrase = function() {
     return select_phrase(winner);
   }
 }()
-
-function process(input) {
-  var tokens = tokenize(input.toLowerCase());
-  var winner = select_winner(tokens, input.length);
-  var phrase = select_phrase(winner);
-  return phrase;
-}
 
 function learn(input) {
   var obj = JSON.parse(input);
