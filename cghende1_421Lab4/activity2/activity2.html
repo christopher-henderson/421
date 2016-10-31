@@ -4,7 +4,7 @@
   <ul style="list-style-type:none" id="conversation"></ul>
 </div>
 <div>
-<input type="test" id="input" onkeyup="respond(event)"></input>
+<input type="test" id="input" onkeyup="respond(event)" autofocus></input>
 </div>
 
 <script>
@@ -94,15 +94,6 @@ function score(input, key, absolute_size) {
     total += larger[i] === smaller[i] ? 1 : 0;
   }
   return (total / larger.length);
-}
-
-function score(input, key) {
-  var total = 0
-  for (var i=0; i < input.length; i ++) {
-    total += input[i] === key[i] ? 1 : 0;
-  }
-  var larger = input.length > key.length ? input.length : key.length;
-  return total / larger
 }
 
 function select_winner(tokens, input_length) {
