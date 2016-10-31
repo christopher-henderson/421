@@ -4,7 +4,7 @@
   <ul style="list-style-type:none" id="conversation"></ul>
 </div>
 <div>
-<input type="test" id="input" onkeyup="respond(event)" autofocus></input>
+<input type="test" id="input" autofocus></input>
 </div>
 
 <script>
@@ -334,7 +334,10 @@ function clear() {
   reset_impatience_prompt();
 }
 
-document.addEventListener('DOMContentLoaded', clear, true);
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('input').onkeyup = respond;
+  clear();
+}, true)
 
 </script>
 </body>

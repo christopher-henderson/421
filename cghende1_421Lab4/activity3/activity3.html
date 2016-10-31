@@ -4,7 +4,7 @@
   <ul style="list-style-type:none" id="conversation"></ul>
 </div>
 <div>
-<input type="test" id="input" onkeyup="respond(event)" autofocus></input>
+<input type="test" id="input" autofocus></input>
 </div>
 
 <script>
@@ -70,7 +70,7 @@ function play_the_game(event) {
     if (input !== "") {
       BACK_STACK.push(input);
     }
-    var resposne = process(input);
+    var response = process(input);
     paint(response, ELIZA);
   }
   reset_impatience_prompt();
@@ -384,7 +384,10 @@ function deserialize() {
   return JSON.parse(obj);
 }
 
-document.addEventListener('DOMContentLoaded', init, true);
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('input').onkeyup = respond;
+  init();
+}, true)
 
 </script>
 </body>
