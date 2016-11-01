@@ -1,7 +1,7 @@
 <html>
 <body>
 <div>
-  <ul style="list-style-type:none" id="conversation"></ul>
+  <ul id="conversation"></ul>
 </div>
 <div>
 <input type="test" id="input" autofocus></input>
@@ -173,17 +173,6 @@ function applyTimeStamp(string) {
   return Date().toString() + ": " + string;
 }
 
-function getColor(actor) {
-  switch (actor) {
-    case ELIZA:
-      return "red";
-    case USER:
-      return "blue";
-    default:
-      return "green";
-  }
-}
-
 function getName(actor) {
   switch (actor) {
     case ELIZA:
@@ -197,9 +186,7 @@ function getName(actor) {
 
 function paint(text, actor) {
   formatted_text = getName(actor) + ": " + applyTimeStamp(text);
-  color = getColor(actor);
   element = document.createElement("li");
-  element.style = "color: " + color;
   element.innerHTML = formatted_text;
   var conversation = document.getElementById("conversation");
   conversation.appendChild(element);
@@ -335,7 +322,6 @@ function init() {
     for (var i=0; i < previous_state.conversation.length; i++) {
       var li = document.createElement("li");
       li.innerHTML = previous_state.conversation[i];
-      li.style = "color: " + (li.innerHTML.startsWith("Eliza") ? "red" : "blue");
       conversation.appendChild(li);
     }
     var been_said = new Set();
