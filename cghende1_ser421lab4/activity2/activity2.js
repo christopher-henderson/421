@@ -83,13 +83,16 @@ function tokenize(input) {
   return tokens;
 }
 
-function similarity(input, key, absolute_size) {
-  var total = 0;
-  for (var i=0; i < input.length; i ++) {
-    total += input[i] === key[i] ? 1 : 0;
+function similarity(token, key) {
+  var score = 0;
+  for (var i=0; i < token.length; i++) {
+    score += token[i] === key[i] ? 1 : 0;
+    score += token[i] === key[i+1] ? 0.5 : 0;
+    score += token[i] === key[i-1] ? 0.5 : 0;
+    score += token[i] === key[i+2] ? 0.25 : 0;
+    score += token[i] === key[i-2] ? 0.25 : 0;
   }
-  var larger = input.length > key.length ? input.length : key.length;
-  return total / larger;
+  return score;
 }
 
 function select_winner(tokens, input_length) {
@@ -98,15 +101,17 @@ function select_winner(tokens, input_length) {
   for (var i=0; i < DICTIONARY.length; i++) {
     var keys = DICTIONARY[i].key;
     var key_score = 0;
+    var key_length = 0;
     for (var key=0; key < keys.length; key++) {
+      key_length += keys[key].length;
       for (var token=0; token < tokens.length; token++) {
         var token_score = similarity(tokens[token], keys[key]);
-        token_score *= token_score === 1 ? 10 : 1;
+        token_score *= token_score >= 1 ? keys[key].length : 1;
         token_score *= tokens[token].length / input_length;
-        token_score /= tokens.length;
         key_score += token_score;
       }
     }
+    key_score /= key_length;
     console.log(key_score + ": " + keys);
     if (key_score >= high_score) {
       high_score = key_score;
