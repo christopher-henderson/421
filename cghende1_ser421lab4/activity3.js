@@ -54,7 +54,7 @@ function play_the_game(event) {
   }
   try {
     learn(input);
-    paint(LEARNED, ELIZA);
+    alert(LEARNED);
   } catch (e) {
     if (input !== "") {
       BACK_STACK.push(input);
@@ -175,10 +175,10 @@ function addObject(obj) {
     throw "Empty keys or phrases";
   }
   obj.key = obj.key.map(function(key) {
-    return JSON.stringify(key).toLowerCase();
+    return key.constructor !== String ? JSON.stringify(key).toLowerCase() : key.toLowerCase();
   });
   obj.phrase = obj.phrase.map(function(phrase) {
-    return JSON.stringify(phrase).toLowerCase();
+    return phrase.constructor !== String ? JSON.stringify(phrase).toLowerCase() : phrase.toLowerCase();
   });
   DICTIONARY.push(obj);
 }

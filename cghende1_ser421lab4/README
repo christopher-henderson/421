@@ -1,0 +1,6 @@
+I tried to make a fuzzy scoring engine for Eliza which KINDA works. You can
+say things like "fugly" and still get the "ugly" responses. However, once
+it gets more complicated I don't really understand the behavior and it can
+get bizarre.
+
+So...if more complicated sentences don't make sense....yeah. Oh well.
