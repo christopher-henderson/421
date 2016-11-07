@@ -1,0 +1,160 @@
+<html>
+<body>
+<div>
+  <ul id="conversation"></ul>
+</div>
+<div>
+<input type="test" id="input" autofocus></input>
+</div>
+
+
+<script>
+
+SENTITY = {
+
+  TAG_URL: 'https://api.sentity.io/v1/tag',
+  SENTIMENT_URL: 'https://api.sentity.io/v1/sentiment',
+  // Super secret. Do not steal.
+  AUTH_TOKEN: 'token 67109a7ab8b2557f122d6c0bad679b481df77eb7',
+  JSON_HEADER: 'application/json',
+  POST: 'POST',
+  GET: 'GET',
+  TOTAL_WORDS_SEEN: 0,
+  TOTAL_SCORE: 0,
+  AVERAGE_SCORE: 0,
+  NEUTRAL: 0,
+
+  get_request_object: function() {
+    if (window.XMLHttpRequest) {
+      return new XMLHttpRequest();
+    } else {
+      return(null);
+    }
+  },
+
+  handle: function(request, callback) {
+    var response = request.srcElement;
+    if (response.readyState !== 4) {
+      return;
+    }
+    if (!(response.status >= 200 && response.status < 300)) {
+      alert('WHOOPS! Something went wrong getting the tags. Response code:' + response.code);
+    }
+    callback(response);
+  },
+
+  get_tags: function(text) {
+    text = text.replace(/\s/g, "%20");
+    console.log(text)
+    var request = this.get_request_object();
+    var url = this.TAG_URL + "?text=" + text;
+    request.onreadystatechange = function(request) {
+      var response = request.srcElement;
+      if (response.readyState !== 4) {
+        return;
+      }
+      if (!(response.status >= 200 && response.status < 300)) {
+        alert('WHOOPS! Something went wrong getting the tags. Response code:' + response.code);
+      }
+      SENTITY.filter_words(JSON.parse(response.responseText));
+    };
+    request.open(this.GET, url, true);
+    request.setRequestHeader('Authorization', this.AUTH_TOKEN);
+    request.send(null);
+  },
+
+  filter_words: function(tags) {
+    var words = tags.filter(function(tag) {
+      return tag.tag === 'JJ' || tag.tag === 'RB';
+    }).map(function(word) {
+      return {'text': word.word};
+    });
+    console.log(words)
+    this.get_sentiments(words);
+  },
+
+  get_sentiments: function(words) {
+    var body = JSON.stringify(words);
+    var request = this.get_request_object();
+    request.onreadystatechange = function(request) {
+      var response = request.srcElement;
+      if (response.readyState !== 4) {
+        return;
+      }
+      if (!(response.status >= 200 && response.status < 300)) {
+        alert('WHOOPS! Something went wrong getting the sentiment. Response code:' + response.code);
+      }
+      var sentiments = JSON.parse(response.responseText);
+      sentiments.forEach(function(sentiment) {
+        SENTITY.TOTAL_WORDS_SEEN += 1;
+        SENTITY.TOTAL_SCORE += sentiment.pos;
+        SENTITY.TOTAL_SCORE -= sentiment.neg;
+      });
+      SENTITY.AVERAGE_SCORE = SENTITY.TOTAL_WORDS_SEEN > 0 ? SENTITY.TOTAL_SCORE / SENTITY.TOTAL_WORDS_SEEN : 0;
+      console.log(SENTITY.AVERAGE_SCORE)
+    };
+    request.open('POST', this.SENTIMENT_URL, true);
+    request.setRequestHeader('Authorization', this.AUTH_TOKEN);
+    request.setRequestHeader('content-type', this.JSON_HEADER);
+    request.send(body);
+  },
+
+};
+
+SENTITY.get_tags('terribly bad')
+
+</script>
+
+<!-- <script>
+
+
+TAG_URL = 'https://api.sentity.io/v1/tag';
+SENTIMENT_URL = 'https://api.sentity.io/v1/sentiment';
+// Super secret. Do not steal.
+AUTH_TOKEN = 'token 67109a7ab8b2557f122d6c0bad679b481df77eb7';
+JSON_HEADER = 'application/json';
+TOTAL_WORDS_SEEN = 0;
+TOTAL_SCORE = 0;
+AVERAGE_SCORE = 0;
+NEUTRAL = 0;
+
+function getRequestObject() {
+  if (window.XMLHttpRequest) {
+    return new XMLHttpRequest();
+  } else {
+    return(null);
+  }
+}
+
+function set_headers(request) {
+  // request.setRequestHeader('Origin', 'localhost');
+  request.setRequestHeader('Access-Control-Allow-Origin', '*');
+  request.setRequestHeader('Authorization', AUTH_TOKEN);
+  // request.setRequestHeader('Access-Control-Allow-Headers', 'Content-Type, Last-Modified, If-Modified-Since, Content-Length, Accept-Encoding, Authorization, X-Requested-With, X-Ratelimit-Limit, X-Ratelimit-Remaining');
+  // request.setRequestHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  return request;
+}
+
+function get_tags(text, callback) {
+  var request = getRequestObject();
+  var url = TAG_URL + "?text=" + text;
+  request.onreadystatechange = function(request) {
+    var response = request.srcElement;
+    if (response.readyState !== 4) {
+      return;
+    }
+    if (!(response.status >= 200 && response.status < 300)) {
+      alert('WHOOPS! Something went wrong getting the tags. Response code:' + response.code);
+    }
+    console.log(response.responseText);
+  };
+  request.open('GET', url, true);
+  request.setRequestHeader('Authorization', AUTH_TOKEN);
+  request.send(null);
+}
+
+get_tags('lol')
+</script> -->
+
+</body>
+</html>
