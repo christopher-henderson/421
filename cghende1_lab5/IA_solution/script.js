@@ -1,6 +1,6 @@
 SENTITY = {
 
-  DEBUG: true,
+  DEBUG: false,
 
   TAG_URL: 'https://api.sentity.io/v1/tag',
   SENTIMENT_URL: 'https://api.sentity.io/v1/sentiment',
@@ -25,8 +25,8 @@ SENTITY = {
     var both_low = "You are so emotionless, tell me what you are feeling?";
     var avg_negative = this.TOTAL_WORDS_SEEN !== 0 ? this.TOTAL_NEGATIVE * -1  / this.TOTAL_WORDS_SEEN : 0;
     var avg_positive = this.TOTAL_WORDS_SEEN !== 0 ? this.TOTAL_POSITIVE / this.TOTAL_WORDS_SEEN : 0;
-    console.log(avg_positive);
-    console.log(avg_negative);
+    this.log(avg_positive);
+    this.log(avg_negative);
     var threshold = 0.4;
     var negative_above_threshold = avg_negative >= threshold;
     var positive_above_threshold = avg_positive >= threshold;
@@ -57,6 +57,25 @@ SENTITY = {
     }
   },
 
+  respond_to_error: function(status) {
+    switch (status) {
+      case 400:
+        alert("The request cannot be fulfilled due to bad syntax. For example invalid JSON was submitted to one of the API endpoints.");
+        break;
+      case 401:
+        alert("Authentication failed due to missing or invalid API key.");
+        break;
+      case 422:
+        alert("A client error prevented the request from executing succesfully. For example required field is missing.");
+        break;
+      case 429:
+        alert("API rate limit exceeded.");
+        break;
+      default:
+        alert("Unknown error. Code: " + status);
+    }
+  },
+
   register_input: function(text) {
     text = text.replace(/\s/g, "%20");
     var request = SENTITY.get_request_object();
@@ -75,7 +94,7 @@ SENTITY = {
       return;
     }
     if (!(response.status >= 200 && response.status < 300)) {
-      alert('WHOOPS! Something went wrong getting the tags. Response code:' + response.status);
+      SENTITY.respond_to_error(response.status);
       return;
     }
     SENTITY.log("Received response from Sentity Tagging.");
@@ -110,7 +129,7 @@ SENTITY = {
       return;
     }
     if (!(response.status >= 200 && response.status < 300)) {
-      alert('WHOOPS! Something went wrong getting the sentiments. Response code:' + response.status);
+      SENTITY.respond_to_error(response.status);
       return;
     }
     SENTITY.log("Received response from Sentity Sentiments.");

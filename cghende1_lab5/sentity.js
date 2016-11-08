@@ -1,6 +1,6 @@
 SENTITY = {
 
-  DEBUG: false,
+  DEBUG: true,
 
   TAG_URL: 'https://api.sentity.io/v1/tag',
   SENTIMENT_URL: 'https://api.sentity.io/v1/sentiment',
@@ -18,6 +18,29 @@ SENTITY = {
   AVERAGE_SCORE: 0,
   NEUTRAL: 0,
 
+  get_timout_phrase: function() {
+    var negative = "You seem sad today, what is the matter?";
+    var positive = "Well you are happy today, why?";
+    var both_high = "You seem moody today, what's up?";
+    var both_low = "You are so emotionless, tell me what you are feeling?";
+    var avg_negative = this.TOTAL_WORDS_SEEN !== 0 ? this.TOTAL_NEGATIVE * -1  / this.TOTAL_WORDS_SEEN : 0;
+    var avg_positive = this.TOTAL_WORDS_SEEN !== 0 ? this.TOTAL_POSITIVE / this.TOTAL_WORDS_SEEN : 0;
+    console.log(avg_positive);
+    console.log(avg_negative);
+    var threshold = 0.4;
+    var negative_above_threshold = avg_negative >= threshold;
+    var positive_above_threshold = avg_positive >= threshold;
+    if (!(negative_above_threshold || positive_above_threshold)) {
+      return both_low;
+    } else if (negative_above_threshold && positive_above_threshold) {
+      return both_high;
+    } else if (negative_above_threshold) {
+      return negative;
+    } else {
+      return positive;
+    }
+  },
+
   log: function(obj) {
     if (SENTITY.DEBUG) {
       console.log(obj);
@@ -31,6 +54,25 @@ SENTITY = {
     } else {
       SENTITY.log("AJAX not supported.");
       return(null);
+    }
+  },
+
+  respond_to_error: function(status) {
+    switch (status) {
+      case 400:
+        alert("The request cannot be fulfilled due to bad syntax. For example invalid JSON was submitted to one of the API endpoints.");
+        break;
+      case 401:
+        alert("Authentication failed due to missing or invalid API key.");
+        break;
+      case 422:
+        alert("A client error prevented the request from executing succesfully. For example required field is missing.");
+        break;
+      case 429:
+        alert("API rate limit exceeded.");
+        break;
+      default:
+        alert("Unknown error. Code: " + status);
     }
   },
 
@@ -52,7 +94,7 @@ SENTITY = {
       return;
     }
     if (!(response.status >= 200 && response.status < 300)) {
-      alert('WHOOPS! Something went wrong getting the tags. Response code:' + response.status);
+      SENTITY.respond_to_error(response.status);
       return;
     }
     SENTITY.log("Received response from Sentity Tagging.");
@@ -87,7 +129,7 @@ SENTITY = {
       return;
     }
     if (!(response.status >= 200 && response.status < 300)) {
-      alert('WHOOPS! Something went wrong getting the sentiments. Response code:' + response.status);
+      SENTITY.respond_to_error(response.status);
       return;
     }
     SENTITY.log("Received response from Sentity Sentiments.");
@@ -111,6 +153,44 @@ SENTITY = {
     SENTITY.DEBUG = true;
     SENTITY.log("TOTAL: positive=" + SENTITY.TOTAL_POSITIVE + ", negative=" + SENTITY.TOTAL_NEGATIVE);
     SENTITY.DEBUG = original_logging;
+    SENTITY.save();
+  },
+
+  save: function() {
+    this.log('Saving the Sentity object.');
+    localStorage[localStorage.name] = JSON.stringify(
+      {
+        'TOTAL_WORDS_SEEN': this.TOTAL_WORDS_SEEN,
+        'TOTAL_SCORE': this.TOTAL_SCORE,
+        'TOTAL_POSITIVE': this.TOTAL_POSITIVE,
+        'TOTAL_NEGATIVE': this.TOTAL_NEGATIVE,
+        'AVERAGE_SCORE': this.AVERAGE_SCORE
+      }
+    );
+  },
+
+  load: function() {
+    var saved = localStorage[localStorage.name];
+    if (saved) {
+      SENTITY.log("Found sentity object in memory for name: " + localStorage.name);
+      var obj = JSON.parse(saved);
+      this.TOTAL_WORDS_SEEN = obj.TOTAL_WORDS_SEEN;
+      this.TOTAL_SCORE = obj.TOTAL_SCORE;
+      this.TOTAL_POSITIVE = obj.TOTAL_POSITIVE;
+      this.TOTAL_NEGATIVE = obj.TOTAL_NEGATIVE;
+      this.AVERAGE_SCORE = obj.TOTAL_SCORE;
+    } else {
+      SENTITY.log("No sentity object in memory for name: " + localStorage.name);
+    }
+  },
+
+  reset: function() {
+    this.log("Clearing the Sentity object.");
+    this.TOTAL_WORDS_SEEN = 0;
+    this.TOTAL_SCORE = 0;
+    this.TOTAL_POSITIVE = 0;
+    this.TOTAL_NEGATIVE = 0;
+    this.AVERAGE_SCORE = 0;
   }
 
 };
