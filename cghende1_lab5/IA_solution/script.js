@@ -42,17 +42,17 @@ SENTITY = {
   },
 
   log: function(obj) {
-    if (SENTITY.DEBUG) {
+    if (this.DEBUG) {
       console.log(obj);
     }
   },
 
   get_request_object: function() {
     if (window.XMLHttpRequest) {
-      SENTITY.log("Creating AJAX object.");
+      this.log("Creating AJAX object.");
       return new XMLHttpRequest();
     } else {
-      SENTITY.log("AJAX not supported.");
+      this.log("AJAX not supported.");
       return(null);
     }
   },
@@ -78,17 +78,19 @@ SENTITY = {
 
   register_input: function(text) {
     text = text.replace(/\s/g, "%20");
-    var request = SENTITY.get_request_object();
-    var url = SENTITY.TAG_URL + "?text=" + text;
-    SENTITY.log("Sending: " + url);
-    request.onreadystatechange = SENTITY.handle_tags;
-    request.open(SENTITY.GET, url, true);
-    request.setRequestHeader('Authorization', SENTITY.AUTH_TOKEN);
+    var request = this.get_request_object();
+    var url = this.TAG_URL + "?text=" + text;
+    this.log("Sending: " + url);
+    request.onreadystatechange = this.handle_tags;
+    request.open(this.GET, url, true);
+    request.setRequestHeader('Authorization', this.AUTH_TOKEN);
     request.send(null);
-    SENTITY.log("Sent: " + url);
+    this.log("Sent: " + url);
   },
 
   handle_tags: function(request) {
+    // Given as a callback to a request object which is why 'this' is
+    // not what you would think it is here. So use SENTITY explicitly.
     var response = request.srcElement;
     if (response.readyState !== 4) {
       return;
@@ -115,15 +117,17 @@ SENTITY = {
 
   get_sentiments: function(words) {
     var body = JSON.stringify(words);
-    var request = SENTITY.get_request_object();
-    request.onreadystatechange = SENTITY.handle_sentiments;
-    request.open('POST', SENTITY.SENTIMENT_URL, true);
-    request.setRequestHeader('Authorization', SENTITY.AUTH_TOKEN);
-    request.setRequestHeader('content-type', SENTITY.JSON_HEADER);
+    var request = this.get_request_object();
+    request.onreadystatechange = this.handle_sentiments;
+    request.open('POST', this.SENTIMENT_URL, true);
+    request.setRequestHeader('Authorization',this.AUTH_TOKEN);
+    request.setRequestHeader('content-type', this.JSON_HEADER);
     request.send(body);
   },
 
   handle_sentiments: function(request) {
+    // Given as a callback to a request object which is why 'this' is
+    // not what you would think it is here. So use SENTITY explicitly.
     var response = request.srcElement;
     if (response.readyState !== 4) {
       return;
@@ -172,7 +176,7 @@ SENTITY = {
   load: function() {
     var saved = localStorage[localStorage.name];
     if (saved) {
-      SENTITY.log("Found sentity object in memory for name: " + localStorage.name);
+      SENTITY.log("Found sentity object in storage for name: " + localStorage.name);
       var obj = JSON.parse(saved);
       this.TOTAL_WORDS_SEEN = obj.TOTAL_WORDS_SEEN;
       this.TOTAL_SCORE = obj.TOTAL_SCORE;
@@ -180,7 +184,7 @@ SENTITY = {
       this.TOTAL_NEGATIVE = obj.TOTAL_NEGATIVE;
       this.AVERAGE_SCORE = obj.TOTAL_SCORE;
     } else {
-      SENTITY.log("No sentity object in memory for name: " + localStorage.name);
+      SENTITY.log("No sentity object in storage for name: " + localStorage.name);
     }
   },
 
