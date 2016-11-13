@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <script type="text/javascript" src="lab5.js">   </script>
+</head>
+
+<body align="center">
+<h2> Eliza </h2>
+
+<div id="name" style="display:block">
+  <form  onsubmit="showChat(); return false;">
+    Hi. What is your name? <br>
+    <input id="username" type="text" name="uname" size=50 ><br>
+  </form>
+</div>
+
+<div id="chat" style="display:none">
+    <!--
+  <form>
+    <textarea id="chatArea" rows="20" cols="70"></textarea><br>
+  </form>
+-->
+    <OL>
+        <div id="chatArea"/>
+    </OL>
+  <form id="msgForm" onsubmit="msgFromUser(); return false;">
+    Talk to Eliza: <input id="msg" type="text" name="msg" size=40 ><br>
+  </form>
+</div>
+
+</body>
+</html>
